@@ -1,5 +1,3 @@
-import { ArrowRight } from 'lucide-react';
-
 import { useEffect, useState } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
 
