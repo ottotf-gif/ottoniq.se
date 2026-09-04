@@ -8,45 +8,113 @@ const corsHeaders = {
     "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[åä]/g, "a")
+    .replace(/ö/g, "o")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+function getNextTuesday(): string {
+  const now = new Date();
+  const day = now.getDay();
+  let daysUntilTuesday = (2 - day + 7) % 7;
+  if (daysUntilTuesday === 0) daysUntilTuesday = 7;
+  const tuesday = new Date(now);
+  tuesday.setDate(now.getDate() + daysUntilTuesday);
+  const months = [
+    "januari", "februari", "mars", "april", "maj", "juni",
+    "juli", "augusti", "september", "oktober", "november", "december",
+  ];
+  return `Tisdag ${tuesday.getDate()} ${months[tuesday.getMonth()]}`;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   try {
-    const { brief_id } = await req.json();
-    if (!brief_id) {
-      return new Response(
-        JSON.stringify({ error: "brief_id krävs" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const body = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { data: brief, error: briefErr } = await supabase
-      .from("brief")
-      .select("*, kunder(*)")
-      .eq("id", brief_id)
-      .maybeSingle();
+    const foretag = (body.foretag || "Okänt företag").trim();
+    const kontaktNamn = (body.kontakt_namn || "").trim();
+    const kontaktMejl = (body.kontakt_mejl || "").trim().toLowerCase();
 
-    if (briefErr || !brief) {
+    if (!foretag || !kontaktMejl) {
       return new Response(
-        JSON.stringify({ error: "Brief hittades inte" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Företag och e-post krävs" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const bilder = (brief.bilder as string[]) || [];
-    const signedUrls: string[] = [];
+    let slug = generateSlug(foretag) || `brief-${Date.now()}`;
 
+    const { data: existing } = await supabase
+      .from("kunder")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (existing) {
+      slug = `${slug}-${Date.now()}`;
+    }
+
+    const { data: kund, error: kundErr } = await supabase
+      .from("kunder")
+      .insert({
+        slug,
+        foretag,
+        kontakt_namn: kontaktNamn || "-",
+        kontakt_mejl: kontaktMejl,
+      })
+      .select()
+      .single();
+
+    if (kundErr || !kund) {
+      return new Response(
+        JSON.stringify({ error: "Kunde inte skapa kund" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const bilder = (body.bilder as string[]) || [];
+
+    const { data: brief, error: briefErr } = await supabase
+      .from("brief")
+      .insert({
+        kund_id: kund.id,
+        foretag_fritext: foretag,
+        mal: body.mal || "",
+        tjanster: body.tjanster || "",
+        omraden: body.omraden || "",
+        vanligaste_fragan: body.vanligaste_fragan || "",
+        referens_lank: body.referens_lank || null,
+        ovrigt: body.ovrigt || null,
+        bilder,
+      })
+      .select()
+      .single();
+
+    if (briefErr || !brief) {
+      return new Response(
+        JSON.stringify({ error: "Kunde inte spara briefen" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const signedUrls: string[] = [];
     if (bilder.length > 0) {
       const { data: urls } = await supabase.storage
         .from("brief-bilder")
         .createSignedUrls(bilder, 60 * 60 * 24 * 7);
-
       if (urls) {
         for (const u of urls) {
           if (u.signedUrl) signedUrls.push(u.signedUrl);
@@ -54,28 +122,41 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const summary = [
-      `NY BRIEF FRÅN: ${brief.kunder?.foretag || "Okänt"}`,
-      `Slug: ${brief.kunder?.slug || "-"}`,
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    const deliveryDate = getNextTuesday();
+
+    const ottoSummary = [
+      `NY BRIEF FRÅN: ${foretag}`,
+      `Kontakt: ${kontaktNamn || "-"} (${kontaktMejl})`,
+      `Slug: ${slug}`,
       ``,
-      `Mål: ${brief.mal}`,
-      `Tjänster: ${brief.tjanster}`,
-      `Områden: ${brief.omraden}`,
-      `Vanligaste frågan: ${brief.vanligaste_fragan}`,
-      brief.referens_lank ? `Referenslänk: ${brief.referens_lank}` : null,
-      brief.ovrigt ? `Övrigt: ${brief.ovrigt}` : null,
+      `Mål: ${body.mal || "-"}`,
+      `Tjänster: ${body.tjanster || "-"}`,
+      `Områden: ${body.omraden || "-"}`,
+      `Vanligaste frågan: ${body.vanligaste_fragan || "-"}`,
+      body.referens_lank ? `Referenslänk: ${body.referens_lank}` : null,
+      body.ovrigt ? `Övrigt: ${body.ovrigt}` : null,
       ``,
       `Antal bilder: ${bilder.length}`,
       signedUrls.length > 0
         ? `Bildlänkar (giltiga 7 dagar):\n${signedUrls.join("\n")}`
         : null,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    ].filter(Boolean).join("\n");
 
-    const resendKey = Deno.env.get("RESEND_API_KEY");
+    const customerSummary = [
+      `Hej ${kontaktNamn || ""},`,
+      ``,
+      `Tack för att du skickade in informationen om ${foretag}.`,
+      `Jag läser igenom allt och hör av mig senast ${deliveryDate}.`,
+      ``,
+      `Om du har frågor under tiden, ring 070-422 38 87 eller svara på detta mejl.`,
+      ``,
+      `Vänliga hälsningar,`,
+      `Otto — Ottoniq`,
+    ].join("\n");
+
     if (resendKey) {
-      const emailRes = await fetch("https://api.resend.com/emails", {
+      await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,20 +165,31 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({
           from: "Ottoniq <noreply@ottoniq.se>",
           to: "ottoniq.se@gmail.com",
-          subject: `Ny brief: ${brief.kunder?.foretag || "Okänt företag"}`,
-          text: summary,
+          subject: `Ny brief: ${foretag}`,
+          text: ottoSummary,
         }),
       });
 
-      if (!emailRes.ok) {
-        console.error("Email failed:", await emailRes.text());
-      }
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${resendKey}`,
+        },
+        body: JSON.stringify({
+          from: "Ottoniq <noreply@ottoniq.se>",
+          to: kontaktMejl,
+          subject: `Tack — jag hör av mig senast ${deliveryDate}`,
+          text: customerSummary,
+        }),
+      });
     } else {
-      console.log("No RESEND_API_KEY — logging summary:\n", summary);
+      console.log("No RESEND_API_KEY — Otto summary:\n", ottoSummary);
+      console.log("Customer summary:\n", customerSummary);
     }
 
     return new Response(
-      JSON.stringify({ ok: true, summary }),
+      JSON.stringify({ ok: true, delivery_date: deliveryDate }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

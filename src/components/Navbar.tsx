@@ -1,16 +1,7 @@
+import { ArrowRight } from 'lucide-react';
+
 import { useEffect, useState } from 'react';
-import { Menu, X } from 'lucide-react';
-
-const sectionLinks = [
-  { id: 'arbete', label: 'Arbete' },
-  { id: 'process', label: 'Process' },
-  { id: 'om', label: 'Om' },
-];
-
-function getSectionHref(id: string): string {
-  if (window.location.pathname === '/') return `#${id}`;
-  return `/#${id}`;
-}
+import { Menu, X, ArrowRight } from 'lucide-react';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -24,6 +15,17 @@ export default function Navbar() {
   }, []);
 
   const contactHref = window.location.pathname === '/' ? '#kontakt' : '/#kontakt';
+
+  const sectionLinks = [
+    { id: 'arbete', label: 'Arbete' },
+    { id: 'process', label: 'Process' },
+    { id: 'om', label: 'Om' },
+  ];
+
+  function getSectionHref(id: string): string {
+    if (window.location.pathname === '/') return `#${id}`;
+    return `/#${id}`;
+  }
 
   return (
     <header
@@ -62,20 +64,15 @@ export default function Navbar() {
           >
             Hemsidecheck
           </a>
-          <a
-            href="/demo"
-            className="text-[13px] text-ink/70 hover:text-ink transition-colors duration-300"
-          >
-            Kom igång
-          </a>
         </nav>
 
         <div className="flex items-center gap-4">
           <a
-            href={contactHref}
-            className="hidden sm:inline-flex items-center text-[13px] text-ink hover:text-gold transition-colors duration-300"
+            href="/demo"
+            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-ink text-cream text-[13px] tracking-wide hover:bg-navy transition-colors duration-300"
           >
-            <span className="link-underline">Skriv till mig</span>
+            Begär demo
+            <ArrowRight className="w-3.5 h-3.5" />
           </a>
           <button
             className="md:hidden p-2 text-ink -mr-2"
@@ -110,16 +107,10 @@ export default function Navbar() {
             <a
               href="/demo"
               onClick={() => setOpen(false)}
-              className="text-base text-ink/80 hover:text-ink transition-colors py-3 border-b border-ink/8"
+              className="mt-6 inline-flex items-center justify-center gap-2 px-5 py-3 bg-ink text-cream text-[14px] tracking-wide"
             >
-              Kom igång
-            </a>
-            <a
-              href={contactHref}
-              onClick={() => setOpen(false)}
-              className="mt-6 text-base text-ink py-3"
-            >
-              <span className="link-underline">Skriv till mig →</span>
+              Begär demo
+              <ArrowRight className="w-4 h-4" />
             </a>
           </nav>
         </div>

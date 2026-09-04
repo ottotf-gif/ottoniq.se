@@ -16,6 +16,7 @@ import ScanPage from './components/ScanPage';
 import Showcase from './components/Showcase';
 import NotFound from './components/NotFound';
 import DemoRequest from './components/DemoRequest';
+import CTA from './components/CTA';
 import useFadeInOnScroll from './hooks/useFadeInOnScroll';
 
 function usePath() {
@@ -83,6 +84,7 @@ function App() {
           <Process />
           <Pricing />
           <Portfolio />
+          <CTA />
           <FAQ />
           <Contact />
         </main>

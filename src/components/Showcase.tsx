@@ -14,8 +14,7 @@ export default function Showcase() {
         </div>
 
         <div className="grid grid-cols-12 gap-4 sm:gap-6 fade-in">
-          {/* Large left image — storefront */}
-          <div className="col-span-12 sm:col-span-7 aspect-[4/3] overflow-hidden bg-cream-deep">
+          <div className="col-span-12 sm:col-span-8 aspect-[16/10] sm:aspect-[16/9] overflow-hidden bg-cream-deep">
             <img
               src="https://images.pexels.com/photos/34029513/pexels-photo-34029513.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
               alt="Lokal butik längs en svensk gata"
@@ -23,25 +22,13 @@ export default function Showcase() {
               loading="lazy"
             />
           </div>
-
-          {/* Right column — stacked */}
-          <div className="col-span-12 sm:col-span-5 grid grid-rows-2 gap-4 sm:gap-6">
-            <div className="aspect-[16/10] overflow-hidden bg-cream-deep">
-              <img
-                src="https://images.pexels.com/photos/251225/pexels-photo-251225.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
-                alt="Modern arbetsplats med skärmar som visar webbdesign"
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                loading="lazy"
-              />
-            </div>
-            <div className="aspect-[16/10] overflow-hidden bg-cream-deep">
-              <img
-                src="https://images.pexels.com/photos/15891798/pexels-photo-15891798.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
-                alt="Båtar i Bohusläns kust"
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                loading="lazy"
-              />
-            </div>
+          <div className="col-span-12 sm:col-span-4 aspect-[16/10] sm:aspect-auto overflow-hidden bg-cream-deep">
+            <img
+              src="https://images.pexels.com/photos/251225/pexels-photo-251225.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+              alt="Modern arbetsplats med skärmar som visar webbdesign"
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+              loading="lazy"
+            />
           </div>
         </div>
 

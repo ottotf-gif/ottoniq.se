@@ -5,7 +5,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const STORAGE_KEY = 'ottoniq_demo_brief';
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 8;
 
 const MAL_OPTIONS = [
   { id: 'ringa', label: 'Ringa' },
@@ -19,10 +19,12 @@ interface ImageFile {
   file: File;
   preview: string;
   status: 'pending' | 'uploading' | 'done' | 'error';
-  progress: string;
 }
 
 interface FormData {
+  foretag: string;
+  kontakt_namn: string;
+  kontakt_mejl: string;
   mal: string[];
   tjanst1: string;
   tjanst2: string;
@@ -34,6 +36,9 @@ interface FormData {
 }
 
 const emptyForm: FormData = {
+  foretag: '',
+  kontakt_namn: '',
+  kontakt_mejl: '',
   mal: [],
   tjanst1: '',
   tjanst2: '',
@@ -110,6 +115,7 @@ export default function DemoRequest() {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [deliveryDate, setDeliveryDate] = useState('');
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -124,11 +130,13 @@ export default function DemoRequest() {
   const canProceed = (): boolean => {
     switch (step) {
       case 0: return form.mal.length > 0;
-      case 1: return form.tjanst1.trim() !== '' && form.tjanst2.trim() !== '' && form.tjanst3.trim() !== '';
-      case 2: return form.omraden.trim() !== '';
-      case 3: return form.vanligaste_fragan.trim() !== '';
-      case 4: return true;
-      case 5: return true;
+      case 1: return form.foretag.trim() !== '';
+      case 2: return form.kontakt_namn.trim() !== '' && form.kontakt_mejl.trim() !== '';
+      case 3: return form.tjanst1.trim() !== '' && form.tjanst2.trim() !== '' && form.tjanst3.trim() !== '';
+      case 4: return form.omraden.trim() !== '';
+      case 5: return form.vanligaste_fragan.trim() !== '';
+      case 6: return true;
+      case 7: return true;
       default: return false;
     }
   };
@@ -147,7 +155,6 @@ export default function DemoRequest() {
       file,
       preview: URL.createObjectURL(file),
       status: 'pending' as const,
-      progress: '',
     }));
     setImages((prev) => [...prev, ...newImages]);
   };
@@ -170,7 +177,7 @@ export default function DemoRequest() {
       }
 
       setImages((prev) =>
-        prev.map((im) => im.id === img.id ? { ...im, status: 'uploading', progress: `Laddar upp ${i + 1} av ${images.length}...` } : im)
+        prev.map((im) => im.id === img.id ? { ...im, status: 'uploading' } : im)
       );
 
       try {
@@ -188,16 +195,16 @@ export default function DemoRequest() {
         if (res.ok) {
           uploaded.push(filename);
           setImages((prev) =>
-            prev.map((im) => im.id === img.id ? { ...im, status: 'done', progress: '' } : im)
+            prev.map((im) => im.id === img.id ? { ...im, status: 'done' } : im)
           );
         } else {
           setImages((prev) =>
-            prev.map((im) => im.id === img.id ? { ...im, status: 'error', progress: 'Misslyckades' } : im)
+            prev.map((im) => im.id === img.id ? { ...im, status: 'error' } : im)
           );
         }
       } catch {
         setImages((prev) =>
-          prev.map((im) => im.id === img.id ? { ...im, status: 'error', progress: 'Misslyckades' } : im)
+          prev.map((im) => im.id === img.id ? { ...im, status: 'error' } : im)
         );
       }
     }
@@ -209,100 +216,44 @@ export default function DemoRequest() {
     setError('');
 
     try {
+      const slug = generateSlug(form.foretag) || `brief-${Date.now()}`;
+      const uploadedFiles = images.length > 0 ? await uploadImages(slug) : [];
       const tjanster = [form.tjanst1, form.tjanst2, form.tjanst3].filter(Boolean).join(' | ');
-      const foretag = form.ovrigt ? form.ovrigt.split('\n')[0].slice(0, 80) : 'Okänt företag';
-      const slug = generateSlug(foretag) || `brief-${Date.now()}`;
 
-      const kundRes = await fetch(`${SUPABASE_URL}/rest/v1/kunder`, {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/brief-notify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          Prefer: 'return=representation',
         },
         body: JSON.stringify({
-          slug,
-          foretag,
-          kontakt_namn: '-',
-          kontakt_mejl: '-',
+          foretag: form.foretag,
+          kontakt_namn: form.kontakt_namn,
+          kontakt_mejl: form.kontakt_mejl,
+          mal: form.mal.join(', '),
+          tjanster,
+          omraden: form.omraden,
+          vanligaste_fragan: form.vanligaste_fragan,
+          referens_lank: form.referens_lank || null,
+          ovrigt: form.ovrigt || null,
+          bilder: uploadedFiles,
         }),
       });
 
-      if (!kundRes.ok) {
-        const errBody = await kundRes.text();
-        if (errBody.includes('duplicate key')) {
-          // slug conflict — append timestamp
-          const retrySlug = `${slug}-${Date.now()}`;
-          const retry = await fetch(`${SUPABASE_URL}/rest/v1/kunder`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              Prefer: 'return=representation',
-            },
-            body: JSON.stringify({
-              slug: retrySlug,
-              foretag,
-              kontakt_namn: '-',
-              kontakt_mejl: '-',
-            }),
-          });
-          if (!retry.ok) throw new Error('Kunde inte skapa kund');
-          const [kund] = await retry.json();
-          return await finishSubmission(kund.id, retrySlug, tjanster);
-        }
-        throw new Error('Kunde inte skapa kund');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Något gick fel. Försök igen.');
       }
 
-      const [kund] = await kundRes.json();
-      await finishSubmission(kund.id, slug, tjanster);
+      const data = await res.json();
+      clearSavedData();
+      setDeliveryDate(data.delivery_date || 'inom några dagar');
+      setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Något gick fel. Försök igen.');
+    } finally {
       setSubmitting(false);
     }
-  };
-
-  const finishSubmission = async (kundId: string, slug: string, tjanster: string) => {
-    const uploadedFiles = images.length > 0 ? await uploadImages(slug) : [];
-
-    const briefRes = await fetch(`${SUPABASE_URL}/rest/v1/brief`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify({
-        kund_id: kundId,
-        mal: form.mal.join(', '),
-        tjanster,
-        omraden: form.omraden,
-        vanligaste_fragan: form.vanligaste_fragan,
-        referens_lank: form.referens_lank || null,
-        ovrigt: form.ovrigt || null,
-        bilder: uploadedFiles,
-      }),
-    });
-
-    if (!briefRes.ok) throw new Error('Kunde inte spara briefen');
-
-    const [briefData] = await briefRes.json();
-
-    fetch(`${SUPABASE_URL}/functions/v1/brief-notify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({ brief_id: briefData.id }),
-    }).catch(() => {});
-
-    clearSavedData();
-    setDone(true);
-    setSubmitting(false);
   };
 
   if (done) {
@@ -311,8 +262,11 @@ export default function DemoRequest() {
         <div className="max-w-lg mx-auto px-6 text-center space-y-8">
           <CheckCircle2 className="w-12 h-12 text-gold mx-auto" />
           <h1 className="font-serif text-[clamp(2rem,5vw,3.5rem)] font-light leading-[1.05] text-ink tracking-tight">
-            Tack. Jag hör av mig inom ett <span className="font-serif-italic text-gold">dygn.</span>
+            Tack. Jag hör av mig senast <span className="font-serif-italic text-gold">{deliveryDate}.</span>
           </h1>
+          <p className="text-sm text-ink/60 leading-[1.6]">
+            En bekräftelse är på väg till din e-post. Har du frågor under tiden?
+          </p>
           <a
             href="tel:+46704223887"
             className="inline-flex items-center gap-3 text-lg text-ink hover:text-gold transition-colors"
@@ -343,8 +297,7 @@ export default function DemoRequest() {
             Berätta om ditt <span className="font-serif-italic text-gold">företag.</span>
           </h1>
           <p className="text-sm text-ink/60 leading-[1.6]">
-            Svara på några snabba frågor så hör jag av mig inom ett dygn med
-            en plan för din hemsida.
+            Svara på några snabba frågor så hör jag av mig med en plan för din hemsida.
           </p>
         </div>
 
@@ -360,7 +313,7 @@ export default function DemoRequest() {
         </div>
 
         {/* Steps */}
-        <div className="min-h-[320px]">
+        <div className="min-h-[280px]">
           {step === 0 && (
             <div className="space-y-6">
               <h2 className="font-serif text-xl sm:text-2xl text-ink leading-snug">
@@ -388,6 +341,43 @@ export default function DemoRequest() {
           {step === 1 && (
             <div className="space-y-6">
               <h2 className="font-serif text-xl sm:text-2xl text-ink leading-snug">
+                Vilket företag gäller det?
+              </h2>
+              <input
+                type="text"
+                value={form.foretag}
+                onChange={(e) => update({ foretag: e.target.value })}
+                className="w-full bg-transparent border-b border-ink/15 py-3 text-ink text-[15px] placeholder:text-ink/30 focus:outline-none focus:border-ink/40 transition-colors"
+                placeholder="Företagsnamn"
+              />
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-6">
+              <h2 className="font-serif text-xl sm:text-2xl text-ink leading-snug">
+                Hur når jag dig?
+              </h2>
+              <input
+                type="text"
+                value={form.kontakt_namn}
+                onChange={(e) => update({ kontakt_namn: e.target.value })}
+                className="w-full bg-transparent border-b border-ink/15 py-3 text-ink text-[15px] placeholder:text-ink/30 focus:outline-none focus:border-ink/40 transition-colors"
+                placeholder="Ditt namn"
+              />
+              <input
+                type="email"
+                value={form.kontakt_mejl}
+                onChange={(e) => update({ kontakt_mejl: e.target.value })}
+                className="w-full bg-transparent border-b border-ink/15 py-3 text-ink text-[15px] placeholder:text-ink/30 focus:outline-none focus:border-ink/40 transition-colors"
+                placeholder="din@epost.se"
+              />
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-6">
+              <h2 className="font-serif text-xl sm:text-2xl text-ink leading-snug">
                 Vilka tre tjänster tjänar ni mest på?
               </h2>
               <div className="space-y-4">
@@ -411,7 +401,7 @@ export default function DemoRequest() {
             </div>
           )}
 
-          {step === 2 && (
+          {step === 4 && (
             <div className="space-y-6">
               <h2 className="font-serif text-xl sm:text-2xl text-ink leading-snug">
                 Vilka orter tar ni jobb i?
@@ -426,7 +416,7 @@ export default function DemoRequest() {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 5 && (
             <div className="space-y-6">
               <h2 className="font-serif text-xl sm:text-2xl text-ink leading-snug">
                 Vad är den vanligaste frågan kunder ställer innan de bokar?
@@ -442,7 +432,7 @@ export default function DemoRequest() {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 6 && (
             <div className="space-y-6">
               <h2 className="font-serif text-xl sm:text-2xl text-ink leading-snug">
                 Bilder
@@ -452,7 +442,6 @@ export default function DemoRequest() {
                 Mobilkort duger gott. Fyra till åtta stycken räcker.
               </p>
 
-              {/* Upload area */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -470,7 +459,6 @@ export default function DemoRequest() {
                 onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
               />
 
-              {/* Thumbnails */}
               {images.length > 0 && (
                 <div className="grid grid-cols-3 gap-3">
                   {images.map((img) => (
@@ -503,7 +491,7 @@ export default function DemoRequest() {
               )}
 
               <button
-                onClick={() => setStep(5)}
+                onClick={() => setStep(7)}
                 className="text-sm text-ink/50 hover:text-ink transition-colors"
               >
                 <span className="link-underline">Jag skickar bilder senare</span>
@@ -511,7 +499,7 @@ export default function DemoRequest() {
             </div>
           )}
 
-          {step === 5 && (
+          {step === 7 && (
             <div className="space-y-6">
               <h2 className="font-serif text-xl sm:text-2xl text-ink leading-snug">
                 Något annat jag borde veta?
