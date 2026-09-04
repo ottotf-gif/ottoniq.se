@@ -2,15 +2,15 @@ import { useState } from 'react';
 
 const faqs = [
   {
-    q: 'Vad kostar en hemsida?',
-    a: 'Allt ingår — design, hosting, support och uppdateringar. Inga uppstartskostnader och inga överraskningar. Hör av dig så går vi igenom vad som passar ditt företag.',
+    q: 'Hur går det till?',
+    a: 'Du berättar om ditt företag, jag designar och bygger sidan. Vi stämmer av under vägen, och när du är nöjd lanserar vi.',
   },
   {
     q: 'Hur lång tid tar det att bygga en hemsida?',
     a: 'Normalt 1–2 veckor från att vi pratat klart om vad du vill ha. Akuta projekt kan gå snabbare.',
   },
   {
-    q: 'Vad ingår i priset?',
+    q: 'Vad ingår?',
     a: 'Allt. Design, kodning, domänuppsättning, hosting, mobilanpassning, SEO-grundoptimering och support.',
   },
   {

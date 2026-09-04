@@ -13,6 +13,9 @@ import ChatBot from './components/ChatBot';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import SiteCheck from './components/SiteCheck';
 import ScanPage from './components/ScanPage';
+import Showcase from './components/Showcase';
+import NotFound from './components/NotFound';
+import DemoRequest from './components/DemoRequest';
 import useFadeInOnScroll from './hooks/useFadeInOnScroll';
 
 function usePath() {
@@ -54,22 +57,48 @@ function App() {
     );
   }
 
+  if (path === '/demo') {
+    return (
+      <div key="demo" className="relative bg-cream min-h-screen text-ink overflow-x-hidden">
+        <Navbar />
+        <main>
+          <DemoRequest />
+        </main>
+        <Footer />
+        <ChatBot />
+      </div>
+    );
+  }
+
+  if (path === '/') {
+    return (
+      <div key="home" className="relative bg-cream min-h-screen text-ink overflow-x-hidden">
+        <Navbar />
+        <main>
+          <Hero />
+          <Marquee items={['Hantverk på skärmen', 'Byggd för din verksamhet', 'Designat från grunden', 'Lugnt och tydligt', 'Inga mallar']} />
+          <Showcase />
+          <SiteCheck />
+          <About />
+          <Process />
+          <Pricing />
+          <Portfolio />
+          <FAQ />
+          <Contact />
+        </main>
+        <Footer />
+        <ChatBot />
+      </div>
+    );
+  }
+
   return (
-    <div key="home" className="relative bg-cream min-h-screen text-ink overflow-x-hidden">
+    <div key="404" className="relative bg-cream min-h-screen text-ink overflow-x-hidden">
       <Navbar />
       <main>
-        <Hero />
-        <Marquee items={['Hantverk på skärmen', 'Byggd för din verksamhet', 'Designat från grunden', 'Lugnt och tydligt', 'Inga mallar']} />
-        <SiteCheck />
-        <About />
-        <Process />
-        <Pricing />
-        <Portfolio />
-        <FAQ />
-        <Contact />
+        <NotFound />
       </main>
       <Footer />
-      <ChatBot />
     </div>
   );
 }

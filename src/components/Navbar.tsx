@@ -4,7 +4,6 @@ import { Menu, X } from 'lucide-react';
 const sectionLinks = [
   { id: 'arbete', label: 'Arbete' },
   { id: 'process', label: 'Process' },
-  { id: 'pris', label: 'Pris' },
   { id: 'om', label: 'Om' },
 ];
 
@@ -63,6 +62,12 @@ export default function Navbar() {
           >
             Hemsidecheck
           </a>
+          <a
+            href="/demo"
+            className="text-[13px] text-ink/70 hover:text-ink transition-colors duration-300"
+          >
+            Kom igång
+          </a>
         </nav>
 
         <div className="flex items-center gap-4">
@@ -101,6 +106,13 @@ export default function Navbar() {
               className="text-base text-ink/80 hover:text-ink transition-colors py-3 border-b border-ink/8"
             >
               Hemsidecheck
+            </a>
+            <a
+              href="/demo"
+              onClick={() => setOpen(false)}
+              className="text-base text-ink/80 hover:text-ink transition-colors py-3 border-b border-ink/8"
+            >
+              Kom igång
             </a>
             <a
               href={contactHref}
