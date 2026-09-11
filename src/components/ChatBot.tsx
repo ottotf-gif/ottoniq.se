@@ -62,7 +62,6 @@ export default function ChatBot() {
     if (open) endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open, loading]);
 
-  // Lock body scroll on mobile when chat is open
   useEffect(() => {
     if (open && window.innerWidth < 640) {
       document.body.style.overflow = 'hidden';
@@ -114,8 +113,6 @@ export default function ChatBot() {
       });
 
       if (!res.ok) {
-        const errText = await res.text();
-        console.error('OpenAI error:', res.status, errText);
         setMessages((prev) => [...prev, { role: 'assistant', content: 'Hoppsan — jag kan inte svara just nu. Mejla gärna ottoniq.se@gmail.com så svarar Otto direkt!' }]);
         setLoading(false);
         return;
@@ -128,8 +125,7 @@ export default function ChatBot() {
       if (booking && booking.email) {
         await submitBooking(booking);
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Något gick fel med uppkopplingen. Mejla gärna ottoniq.se@gmail.com så svarar Otto direkt!' }]);
     }
     setLoading(false);
@@ -137,7 +133,6 @@ export default function ChatBot() {
 
   return (
     <>
-      {/* Launcher button */}
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Öppna chatt"
@@ -152,66 +147,64 @@ export default function ChatBot() {
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          background: '#1B2E4B',
-          color: '#F5F2EC',
+          background: '#C6FF3D',
+          color: '#0A0B0F',
           border: 'none',
           borderRadius: 4,
           cursor: 'pointer',
           fontFamily: "'Inter Tight', system-ui, sans-serif",
           fontSize: 13,
+          fontWeight: 500,
           letterSpacing: '0.02em',
           transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)',
-          boxShadow: '0 6px 28px rgba(27,46,75,0.28)',
+          boxShadow: '0 6px 28px rgba(198,255,61,0.15)',
         }}
       >
         {open ? (
           <span style={{ margin: '0 auto', fontSize: 18, lineHeight: 1 }}>✕</span>
         ) : (
           <>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C9A84C', flexShrink: 0 }} />
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#0A0B0F', flexShrink: 0 }} />
             Chatta med oss
           </>
         )}
       </button>
 
-      {/* Chat window */}
       {open && (
         <div
           className="tg-chat-window"
           style={{
             position: 'fixed',
             zIndex: 50,
-            background: '#F5F2EC',
+            background: '#121319',
             display: 'flex',
             flexDirection: 'column',
-            border: '1px solid rgba(20,25,42,0.15)',
+            border: '1px solid #262733',
             borderRadius: 4,
             overflow: 'hidden',
-            boxShadow: '0 24px 70px rgba(27,46,75,0.30)',
+            boxShadow: '0 24px 70px rgba(0,0,0,0.5)',
           }}
         >
-          {/* Header — editorial style with eyebrow */}
-          <div style={{ background: '#1B2E4B', padding: '20px 22px', position: 'relative' }}>
-            <div style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(201,168,76,0.9)', marginBottom: 6 }}>
+          <div style={{ background: '#0A0B0F', padding: '20px 22px', position: 'relative', borderBottom: '1px solid #1E1F2A' }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C6FF3D', marginBottom: 6 }}>
               Ottoniq — chatt
             </div>
-            <div style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontSize: 22, color: '#F5F2EC', lineHeight: 1 }}>
+            <div style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontSize: 22, color: '#EDEDEF', lineHeight: 1 }}>
               Hur kan jag hjälpa dig?
             </div>
             <button
               onClick={() => setOpen(false)}
               aria-label="Stäng"
-              style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', color: 'rgba(245,242,236,0.6)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4 }}
+              style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', color: '#5A5B66', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4 }}
             >
               ✕
             </button>
           </div>
 
-          {/* Messages */}
           <div className="tg-chat-messages" style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             {messages.map((m, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(20,25,42,0.4)', marginBottom: 5, paddingLeft: m.role === 'user' ? 0 : 2, paddingRight: m.role === 'user' ? 2 : 0 }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#5A5B66', marginBottom: 5, paddingLeft: m.role === 'user' ? 0 : 2, paddingRight: m.role === 'user' ? 2 : 0 }}>
                   {m.role === 'user' ? 'Du' : 'Ottoniq'}
                 </div>
                 <div
@@ -221,9 +214,9 @@ export default function ChatBot() {
                     fontSize: 14,
                     lineHeight: 1.6,
                     borderRadius: 4,
-                    background: m.role === 'user' ? '#1B2E4B' : '#FFFFFF',
-                    color: m.role === 'user' ? '#F5F2EC' : '#14192A',
-                    border: m.role === 'user' ? 'none' : '1px solid rgba(20,25,42,0.1)',
+                    background: m.role === 'user' ? '#C6FF3D' : '#1C1D27',
+                    color: m.role === 'user' ? '#0A0B0F' : '#EDEDEF',
+                    border: m.role === 'user' ? 'none' : '1px solid #262733',
                   }}
                 >
                   {m.content}
@@ -232,18 +225,18 @@ export default function ChatBot() {
             ))}
             {booked && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <div style={{ borderLeft: '2px solid #C9A84C', paddingLeft: 14, paddingTop: 2, paddingBottom: 2 }}>
-                  <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 3 }}>Skickat</div>
-                  <div style={{ fontSize: 13, color: '#1B2E4B', lineHeight: 1.5 }}>Din förfrågan är skickad till Otto — han hör av sig inom en dag.</div>
+                <div style={{ borderLeft: '2px solid #C6FF3D', paddingLeft: 14, paddingTop: 2, paddingBottom: 2 }}>
+                  <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#C6FF3D', marginBottom: 3 }}>Skickat</div>
+                  <div style={{ fontSize: 13, color: '#8A8B95', lineHeight: 1.5 }}>Din förfrågan är skickad till Otto — han hör av sig inom en dag.</div>
                 </div>
               </div>
             )}
             {loading && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(20,25,42,0.4)', marginBottom: 5, paddingLeft: 2 }}>Ottoniq</div>
-                <div style={{ background: '#FFFFFF', border: '1px solid rgba(20,25,42,0.1)', borderRadius: 4, padding: '14px 16px', display: 'flex', gap: 5 }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#5A5B66', marginBottom: 5, paddingLeft: 2 }}>Ottoniq</div>
+                <div style={{ background: '#1C1D27', border: '1px solid #262733', borderRadius: 4, padding: '14px 16px', display: 'flex', gap: 5 }}>
                   {[0, 1, 2].map((i) => (
-                    <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(20,25,42,0.35)', animation: `chatbounce 1s ${i * 150}ms infinite` }} />
+                    <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#5A5B66', animation: `chatbounce 1s ${i * 150}ms infinite` }} />
                   ))}
                 </div>
               </div>
@@ -251,21 +244,20 @@ export default function ChatBot() {
             <div ref={endRef} />
           </div>
 
-          {/* Input — sharp, hairline divider */}
-          <div style={{ borderTop: '1px solid rgba(20,25,42,0.12)', padding: 14, background: '#F5F2EC' }}>
+          <div style={{ borderTop: '1px solid #1E1F2A', padding: 14, background: '#0A0B0F' }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && send()}
                 placeholder="Skriv ett meddelande…"
-                style={{ flex: 1, background: '#FFFFFF', border: '1px solid rgba(20,25,42,0.15)', borderRadius: 4, padding: '12px 14px', fontSize: 14, color: '#14192A', outline: 'none', fontFamily: "'Inter Tight', system-ui, sans-serif" }}
+                style={{ flex: 1, background: '#16171F', border: '1px solid #262733', borderRadius: 4, padding: '12px 14px', fontSize: 14, color: '#EDEDEF', outline: 'none', fontFamily: "'Inter Tight', system-ui, sans-serif" }}
               />
               <button
                 onClick={send}
                 disabled={loading || !input.trim()}
                 aria-label="Skicka"
-                style={{ padding: '0 18px', borderRadius: 4, background: '#C9A84C', color: '#1B2E4B', border: 'none', cursor: loading || !input.trim() ? 'default' : 'pointer', opacity: loading || !input.trim() ? 0.4 : 1, transition: 'opacity 0.2s', fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}
+                style={{ padding: '0 18px', borderRadius: 4, background: '#C6FF3D', color: '#0A0B0F', border: 'none', cursor: loading || !input.trim() ? 'default' : 'pointer', opacity: loading || !input.trim() ? 0.4 : 1, transition: 'opacity 0.2s', fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}
               >
                 Skicka
               </button>

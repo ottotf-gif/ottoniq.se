@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import About from './components/About';
+import Intro from './components/Intro';
 import Process from './components/Process';
 import Pricing from './components/Pricing';
 import Portfolio from './components/Portfolio';
@@ -13,7 +13,7 @@ import ChatBot from './components/ChatBot';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import SiteCheck from './components/SiteCheck';
 import ScanPage from './components/ScanPage';
-import Showcase from './components/Showcase';
+import StyleShowcase from './components/StyleShowcase';
 import NotFound from './components/NotFound';
 import DemoRequest from './components/DemoRequest';
 import CTA from './components/CTA';
@@ -35,7 +35,7 @@ function App() {
 
   if (path === '/privacypolicy') {
     return (
-      <div key="privacy" className="relative bg-cream min-h-screen text-ink overflow-x-hidden">
+      <div key="privacy" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
         <Navbar />
         <main>
           <PrivacyPolicy />
@@ -47,7 +47,7 @@ function App() {
 
   if (path === '/scan') {
     return (
-      <div key="scan" className="relative bg-cream min-h-screen text-ink overflow-x-hidden">
+      <div key="scan" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
         <Navbar />
         <main>
           <ScanPage />
@@ -60,7 +60,7 @@ function App() {
 
   if (path === '/demo') {
     return (
-      <div key="demo" className="relative bg-cream min-h-screen text-ink overflow-x-hidden">
+      <div key="demo" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
         <Navbar />
         <main>
           <DemoRequest />
@@ -73,14 +73,14 @@ function App() {
 
   if (path === '/') {
     return (
-      <div key="home" className="relative bg-cream min-h-screen text-ink overflow-x-hidden">
+      <div key="home" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
         <Navbar />
         <main>
           <Hero />
-          <Marquee items={['Hantverk på skärmen', 'Byggd för din verksamhet', 'Designat från grunden', 'Lugnt och tydligt', 'Inga mallar']} />
-          <Showcase />
+          <Marquee items={['Design from scratch', 'No templates', 'Built for speed', 'Local business', 'Bohuslän', 'SEO-optimized']} />
+          <Intro />
+          <StyleShowcase />
           <SiteCheck />
-          <About />
           <Process />
           <Pricing />
           <Portfolio />
@@ -95,7 +95,7 @@ function App() {
   }
 
   return (
-    <div key="404" className="relative bg-cream min-h-screen text-ink overflow-x-hidden">
+    <div key="404" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
       <Navbar />
       <main>
         <NotFound />

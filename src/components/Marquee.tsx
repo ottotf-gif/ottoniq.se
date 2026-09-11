@@ -1,34 +1,21 @@
-interface Props {
-  items: string[];
+interface MarqueeProps {
+  items?: string[];
 }
 
-export default function Marquee({ items }: Props) {
+export default function Marquee({ items = [] }: MarqueeProps) {
+  const doubled = [...items, ...items, ...items, ...items];
   return (
-    <div className="py-16 sm:py-20 border-y border-ink/10 bg-cream-deep/40 overflow-hidden">
+    <section className="border-y border-border-subtle bg-bg py-6 overflow-hidden">
       <div className="marquee">
-        <div className="marquee__track" aria-hidden="false">
-          {items.map((item, i) => (
-            <span
-              key={i}
-              className="font-serif-italic text-3xl sm:text-4xl text-ink/85 whitespace-nowrap flex items-baseline gap-12 leading-[1.4] py-2"
-            >
+        <div className="marquee__track">
+          {doubled.map((item, i) => (
+            <span key={i} className="flex items-center gap-12 text-text-dim text-sm tracking-wide whitespace-nowrap">
               {item}
-              <span className="text-gold not-italic font-sans text-xl">✦</span>
-            </span>
-          ))}
-        </div>
-        <div className="marquee__track" aria-hidden="true">
-          {items.map((item, i) => (
-            <span
-              key={i}
-              className="font-serif-italic text-3xl sm:text-4xl text-ink/85 whitespace-nowrap flex items-baseline gap-12 leading-[1.4] py-2"
-            >
-              {item}
-              <span className="text-gold not-italic font-sans text-xl">✦</span>
+              <span className="text-accent text-xs">✦</span>
             </span>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

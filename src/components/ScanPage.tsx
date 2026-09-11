@@ -72,72 +72,31 @@ function normalizeDisplay(url: string): string {
   }
 }
 
-function ScoreRing({ score, size = 72 }: { score: number | null; size?: number }) {
+function ScoreBar({ score, label }: { score: number | null; label: string }) {
   if (score === null) {
     return (
-      <div
-        className="inline-flex flex-col items-center justify-center gap-1"
-        style={{ width: size, height: size + 16 }}
-      >
-        <div
-          className="relative inline-flex items-center justify-center"
-          style={{ width: size, height: size }}
-        >
-          <svg className="absolute inset-0" width={size} height={size}>
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={(size - 8) / 2}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={4}
-              className="text-ink/8"
-            />
-          </svg>
-          <span className="text-xs text-ink/40">—</span>
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between">
+          <span className="text-sm text-text-muted">{label}</span>
+          <span className="text-sm text-text-dim">—</span>
         </div>
-        <span className="text-[10px] text-ink/40 text-center leading-tight">
-          Kunde inte analyseras
-        </span>
+        <div className="score-bar" />
       </div>
     );
   }
-
-  const radius = (size - 8) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const color =
-    score >= 75 ? 'text-emerald-600' : score >= 55 ? 'text-amber-500' : 'text-red-500';
-
+  const color = score >= 75 ? '#C6FF3D' : score >= 55 ? '#FFB340' : '#FF4D4D';
   return (
-    <div
-      className="relative inline-flex items-center justify-center"
-      style={{ width: size, height: size }}
-    >
-      <svg className="absolute inset-0 -rotate-90" width={size} height={size}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={4}
-          className="text-ink/8"
+    <div className="space-y-2">
+      <div className="flex items-baseline justify-between">
+        <span className="text-sm text-text-muted">{label}</span>
+        <span className="font-serif text-2xl sm:text-3xl font-light text-text">{score}</span>
+      </div>
+      <div className="score-bar">
+        <div
+          className="score-bar__fill"
+          style={{ width: `${score}%`, background: color }}
         />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={4}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className={`${color} transition-all duration-1000 ease-out`}
-        />
-      </svg>
-      <span className="text-lg font-medium text-ink">{score}</span>
+      </div>
     </div>
   );
 }
@@ -154,15 +113,15 @@ function CheckItem({
   const Icon =
     pass === null ? AlertTriangle : pass ? CheckCircle2 : XCircle;
   const color =
-    pass === null ? 'text-ink/40' : pass ? 'text-emerald-600' : 'text-red-500';
+    pass === null ? 'text-text-dim' : pass ? 'text-accent' : 'text-red-400';
 
   return (
     <div className="flex items-start gap-3 py-2">
       <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${color}`} />
       <div className="min-w-0">
-        <span className="text-sm text-ink/80">{label}</span>
+        <span className="text-sm text-text-muted">{label}</span>
         {value && (
-          <p className="text-xs text-ink/50 mt-0.5 truncate">{value}</p>
+          <p className="text-xs text-text-dim mt-0.5 truncate">{value}</p>
         )}
       </div>
     </div>
@@ -195,8 +154,8 @@ function ScreenshotCarousel({
             onClick={() => setActive(i)}
             className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs border transition-colors duration-200 ${
               active === i
-                ? 'border-ink/30 text-ink bg-white'
-                : 'border-ink/10 text-ink/50 hover:text-ink/70'
+                ? 'border-border text-text bg-bg-elev'
+                : 'border-border-subtle text-text-dim hover:text-text-muted'
             }`}
           >
             {item.icon}
@@ -204,19 +163,19 @@ function ScreenshotCarousel({
           </button>
         ))}
       </div>
-      <div className="relative overflow-hidden bg-white border border-ink/10 p-2">
+      <div className="relative overflow-hidden bg-bg-elev border border-border-subtle p-2">
         <div className="flex items-center justify-between absolute top-1/2 -translate-y-1/2 left-2 right-2 z-10 pointer-events-none">
           {items.length > 1 && (
             <>
               <button
                 onClick={() => setActive((a) => (a - 1 + items.length) % items.length)}
-                className="pointer-events-auto w-7 h-7 flex items-center justify-center bg-white/80 border border-ink/10 text-ink/60 hover:text-ink"
+                className="pointer-events-auto w-7 h-7 flex items-center justify-center bg-bg/80 border border-border text-text-muted hover:text-text"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setActive((a) => (a + 1) % items.length)}
-                className="pointer-events-auto w-7 h-7 flex items-center justify-center bg-white/80 border border-ink/10 text-ink/60 hover:text-ink"
+                className="pointer-events-auto w-7 h-7 flex items-center justify-center bg-bg/80 border border-border text-text-muted hover:text-text"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -330,52 +289,46 @@ export default function ScanPage() {
 
   const categories = result
     ? [
-        { label: 'Prestanda', score: result.scores.performance, icon: <Gauge className="w-5 h-5" /> },
+        { label: 'Performance', score: result.scores.performance, icon: <Gauge className="w-5 h-5" /> },
+        { label: 'Mobile', score: result.scores.mobile, icon: <Smartphone className="w-5 h-5" /> },
         { label: 'SEO', score: result.scores.seo, icon: <Search className="w-5 h-5" /> },
-        { label: 'Tillgänglighet', score: result.scores.accessibility, icon: <Eye className="w-5 h-5" /> },
-        { label: 'Säkerhet', score: result.scores.security, icon: <ShieldCheck className="w-5 h-5" /> },
-        { label: 'Mobil', score: result.scores.mobile, icon: <Smartphone className="w-5 h-5" /> },
+        { label: 'Accessibility', score: result.scores.accessibility, icon: <Eye className="w-5 h-5" /> },
+        { label: 'Security', score: result.scores.security, icon: <ShieldCheck className="w-5 h-5" /> },
       ]
     : [];
 
   return (
-    <section className="min-h-screen pt-36 sm:pt-44 pb-20 sm:pb-32 bg-cream">
+    <section className="min-h-screen pt-36 sm:pt-44 pb-20 sm:pb-32 bg-bg noise">
       <div className="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16">
         {/* Header */}
-        <div className="grid grid-cols-12 gap-y-6 mb-14 sm:mb-20">
-          <div className="col-span-12 lg:col-span-3 flex flex-col gap-2">
-            <span className="eyebrow text-ink/50">Verktyg</span>
-            <span className="eyebrow text-ink/50">Hemsidecheck</span>
-          </div>
-          <div className="col-span-12 lg:col-span-9">
-            <h1 className="font-serif text-[clamp(2.25rem,5.5vw,4.5rem)] font-light leading-[1.05] text-ink tracking-tight max-w-3xl text-balance">
-              Se hur din hemsida <span className="font-serif-italic text-gold">presterar</span>{' '}
-              idag.
-            </h1>
-            <p className="mt-5 text-base sm:text-lg text-ink/65 leading-[1.6] max-w-2xl text-pretty">
-              Ange din adress nedan. Jag kontrollerar prestanda, SEO, säkerhet och
-              mobilvänlighet med hjälp av Googles verktyg och en direkt analys av din sida.
-            </p>
-          </div>
+        <div className="mb-14 sm:mb-20 fade-in">
+          <span className="section-label mb-6 block">N° 04 — Scan Tool</span>
+          <h1 className="font-serif text-[clamp(2.25rem,5.5vw,4.5rem)] font-light leading-[1.0] text-text tracking-tight max-w-3xl text-balance mb-6">
+            Your website.{' '}
+            <span className="font-serif-italic text-accent">Under the microscope.</span>
+          </h1>
+          <p className="text-base sm:text-lg text-text-muted leading-[1.55] max-w-lg text-pretty">
+            See how your website performs across speed, mobile experience, SEO and first impression.
+          </p>
         </div>
 
         {/* Search bar */}
-        <div className="mb-16">
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-2xl">
+        <div className="mb-16 fade-in">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-2xl">
             <div className="relative flex-1">
-              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink/35" />
+              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim" />
               <input
                 type="text"
                 value={inputUrl}
                 onChange={(e) => setInputUrl(e.target.value)}
-                placeholder="www.dittforetag.se"
-                className="w-full pl-11 pr-5 py-4 bg-white border border-ink/12 text-ink placeholder:text-ink/40 text-[15px] focus:outline-none focus:border-ink/30 transition-colors duration-300"
+                placeholder="https://yourwebsite.se"
+                className="w-full pl-11 pr-5 py-4 bg-bg-elev border border-border text-text placeholder:text-text-dim text-[15px] focus:outline-none focus:border-accent transition-colors duration-300"
               />
             </div>
             <button
               type="submit"
               disabled={scanning}
-              className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-ink text-cream text-[14px] tracking-wide hover:bg-navy transition-colors duration-300 shrink-0 disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-3 px-7 py-4 bg-accent text-bg text-[14px] font-medium hover:bg-accent-dim transition-colors duration-300 shrink-0 disabled:opacity-60"
             >
               {scanning ? (
                 <>
@@ -384,7 +337,7 @@ export default function ScanPage() {
                 </>
               ) : (
                 <>
-                  Analysera
+                  Analyse website
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -394,10 +347,14 @@ export default function ScanPage() {
 
         {/* Scanning */}
         {scanning && (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-gold animate-spin mb-4" />
-            <p className="text-ink/60 text-sm">{progress}</p>
-            <p className="text-ink/40 text-xs mt-2">
+          <div className="flex flex-col items-center justify-center py-20 fade-in">
+            <div className="relative mb-6">
+              <div className="w-16 h-16 border border-border-subtle rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+              </div>
+            </div>
+            <p className="text-text-muted text-sm">{progress}</p>
+            <p className="text-text-dim text-xs mt-2">
               Detta kan ta upp till 30 sekunder
             </p>
           </div>
@@ -405,10 +362,10 @@ export default function ScanPage() {
 
         {/* Error */}
         {error && !scanning && (
-          <div className="py-12 text-center">
-            <XCircle className="w-6 h-6 text-red-500 mx-auto mb-3" />
-            <p className="text-ink/70 text-sm">{error}</p>
-            <p className="text-ink/45 text-xs mt-2">
+          <div className="py-12 text-center fade-in">
+            <XCircle className="w-6 h-6 text-red-400 mx-auto mb-3" />
+            <p className="text-text-muted text-sm">{error}</p>
+            <p className="text-text-dim text-xs mt-2">
               Kontrollera att adressen stämmer och försök igen.
             </p>
           </div>
@@ -416,58 +373,65 @@ export default function ScanPage() {
 
         {/* Results */}
         {result && !scanning && (
-          <div className="space-y-16">
+          <div className="space-y-16 fade-in">
             {/* AI Summary */}
             {result.summary && (
-              <div className="bg-white border border-ink/10 p-6 sm:p-8 max-w-3xl">
-                <p className="text-ink/80 text-[15px] leading-[1.7] italic">
+              <div className="bg-bg-elev border border-border-subtle p-6 sm:p-8 max-w-3xl">
+                <p className="text-text-muted text-[15px] leading-[1.7] italic">
                   "{result.summary}"
                 </p>
               </div>
             )}
 
-            {/* Overall score + categories */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-10 border-b border-ink/10">
-              {overallScore !== null ? (
-                <ScoreRing score={overallScore} size={88} />
-              ) : (
-                <div className="w-[88px] h-[88px] flex items-center justify-center">
-                  <span className="text-xs text-ink/40 text-center">Kunde inte beräknas</span>
+            {/* Overall score */}
+            <div className="border-b border-border-subtle pb-10">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6">
+                {overallScore !== null ? (
+                  <div>
+                    <div className="section-label mb-2">Overall Score</div>
+                    <div className="font-serif text-[clamp(4rem,10vw,8rem)] font-light leading-none text-text tracking-tight">
+                      {overallScore}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="section-label mb-2">Overall Score</div>
+                    <div className="font-serif text-4xl text-text-dim">—</div>
+                  </div>
+                )}
+                <div className="sm:ml-8 sm:pb-4">
+                  <p className="text-text-muted text-sm">
+                    {normalizeDisplay(result.finalUrl)}
+                  </p>
+                  <p className="text-text-dim text-xs mt-1">
+                    {result.responseTimeMs}ms svarstid
+                    {validScores.length > 0 && validScores.length < 5 && (
+                      <span className="ml-2">
+                        ({validScores.length} av 5 kategorier)
+                      </span>
+                    )}
+                  </p>
                 </div>
-              )}
-              <div>
-                <h2 className="font-serif text-2xl sm:text-3xl text-ink mb-1">
-                  Övergripande betyg
-                </h2>
-                <p className="text-ink/60 text-sm">
-                  {normalizeDisplay(result.finalUrl)} — {result.responseTimeMs}ms svarstid
-                  {validScores.length > 0 && validScores.length < 5 && (
-                    <span className="ml-2 text-ink/40">
-                      (baserat på {validScores.length} av 5 kategorier)
-                    </span>
-                  )}
-                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
+            {/* Category scores — editorial bars */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8">
               {categories.map((cat) => (
                 <div key={cat.label} className="space-y-3">
-                  <div className="flex items-center gap-3 text-ink/60">
+                  <div className="flex items-center gap-3 text-text-muted">
                     {cat.icon}
-                    <span className="text-sm font-medium text-ink">{cat.label}</span>
+                    <span className="text-sm font-medium text-text">{cat.label}</span>
                   </div>
-                  <ScoreRing score={cat.score} size={64} />
+                  <ScoreBar score={cat.score} label="" />
                 </div>
               ))}
             </div>
 
             {/* Screenshots */}
             {(result.screenshots.mobile || result.screenshots.desktop) && (
-              <div className="pt-10 border-t border-ink/10">
-                <h3 className="font-serif text-xl sm:text-2xl text-ink mb-6">
-                  Skärmbilder
-                </h3>
+              <div className="pt-10 border-t border-border-subtle">
+                <h3 className="section-label mb-6">Screenshots</h3>
                 <ScreenshotCarousel
                   mobile={result.screenshots.mobile}
                   desktop={result.screenshots.desktop}
@@ -475,16 +439,14 @@ export default function ScanPage() {
               </div>
             )}
 
-            {/* Recommendations (data-driven, from backend) */}
+            {/* Recommendations */}
             {result.recommendations && result.recommendations.length > 0 && (
-              <div className="pt-10 border-t border-ink/10">
-                <h3 className="font-serif text-xl sm:text-2xl text-ink mb-6">
-                  Förbättringsmöjligheter
-                </h3>
+              <div className="pt-10 border-t border-border-subtle">
+                <h3 className="section-label mb-6">Recommendations</h3>
                 <ul className="space-y-4 max-w-2xl">
                   {result.recommendations.map((rec, i) => (
-                    <li key={i} className="flex gap-3 text-ink/70 text-[15px] leading-[1.6]">
-                      <span className="text-gold mt-0.5 shrink-0">—</span>
+                    <li key={i} className="flex gap-3 text-text-muted text-[15px] leading-[1.6]">
+                      <span className="text-accent mt-0.5 shrink-0">—</span>
                       <span>{rec}</span>
                     </li>
                   ))}
@@ -493,21 +455,18 @@ export default function ScanPage() {
             )}
 
             {result.recommendations && result.recommendations.length === 0 && (
-              <div className="pt-10 border-t border-ink/10">
-                <h3 className="font-serif text-xl sm:text-2xl text-ink mb-4">
-                  Förbättringsmöjligheter
-                </h3>
-                <p className="text-ink/60 text-[15px]">
-                  Inga uppenbara brister hittades. Sidan ser bra ut baserat på de kontroller som gjorts.
+              <div className="pt-10 border-t border-border-subtle">
+                <h3 className="section-label mb-4">Recommendations</h3>
+                <p className="text-text-muted text-[15px]">
+                  Inga uppenbara brister hittades. Sidan ser bra ut.
                 </p>
               </div>
             )}
 
             {/* Technical details */}
-            <div className="pt-10 border-t border-ink/10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {/* SEO */}
+            <div className="pt-10 border-t border-border-subtle grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               <div>
-                <h4 className="eyebrow text-ink/50 mb-4">SEO</h4>
+                <h4 className="section-label mb-4">SEO</h4>
                 <div className="space-y-0.5">
                   <CheckItem
                     pass={result.meta.title !== null}
@@ -539,9 +498,8 @@ export default function ScanPage() {
                 </div>
               </div>
 
-              {/* Tillgänglighet & Mobil */}
               <div>
-                <h4 className="eyebrow text-ink/50 mb-4">Tillgänglighet & Mobil</h4>
+                <h4 className="section-label mb-4">Accessibility & Mobile</h4>
                 <div className="space-y-0.5">
                   <CheckItem
                     pass={result.meta.viewport !== null}
@@ -573,9 +531,8 @@ export default function ScanPage() {
                 </div>
               </div>
 
-              {/* Säkerhet */}
               <div>
-                <h4 className="eyebrow text-ink/50 mb-4">Säkerhet & Teknik</h4>
+                <h4 className="section-label mb-4">Security & Tech</h4>
                 <div className="space-y-0.5">
                   <CheckItem pass={result.isHttps} label="HTTPS" />
                   <CheckItem
@@ -608,34 +565,27 @@ export default function ScanPage() {
             </div>
 
             {/* CTA */}
-            <div className="pt-12 border-t border-ink/10">
-              <h3 className="font-serif text-2xl sm:text-3xl text-ink mb-4">
+            <div className="pt-12 border-t border-border-subtle">
+              <h3 className="font-serif text-2xl sm:text-3xl text-text mb-4 font-light tracking-tight">
                 Vill du ta nästa steg?
               </h3>
-              <p className="text-ink/65 text-base leading-[1.6] max-w-xl mb-8 text-pretty">
+              <p className="text-text-muted text-base leading-[1.6] max-w-xl mb-8 text-pretty">
                 Det finns mer att titta på än vad som ryms i en snabbanalys. Boka ett kort
-                samtal så berättar jag vad jag ser — och vad som skulle göra störst skillnad
-                för din verksamhet.
+                samtal så berättar jag vad jag ser — och vad som skulle göra störst skillnad.
               </p>
-              <a
-                href="/#kontakt"
-                className="inline-flex items-center gap-3 px-7 py-4 bg-ink text-cream text-[14px] tracking-wide hover:bg-navy transition-colors duration-300"
-              >
-                Boka ett kostnadsfritt samtal
-                <ArrowRight className="w-4 h-4" />
+              <a href="/demo" className="btn-accent group">
+                Start a project
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
               </a>
             </div>
 
             {/* Explore more */}
-            <div className="pt-8 border-t border-ink/10 flex flex-wrap gap-6 text-sm">
-              <a href="/#arbete" className="text-ink/60 hover:text-ink transition-colors">
+            <div className="pt-8 border-t border-border-subtle flex flex-wrap gap-6 text-sm">
+              <a href="/#arbete" className="text-text-dim hover:text-text transition-colors">
                 <span className="link-underline">Se tidigare projekt</span>
               </a>
-              <a href="/#om" className="text-ink/60 hover:text-ink transition-colors">
+              <a href="/#om" className="text-text-dim hover:text-text transition-colors">
                 <span className="link-underline">Om Otto</span>
-              </a>
-              <a href="/#pris" className="text-ink/60 hover:text-ink transition-colors">
-                <span className="link-underline">Priser</span>
               </a>
             </div>
           </div>
@@ -644,7 +594,7 @@ export default function ScanPage() {
         {/* Empty state */}
         {!scanning && !result && !error && (
           <div className="py-16 text-center">
-            <p className="text-ink/50 text-sm">
+            <p className="text-text-dim text-sm">
               Skriv in en adress ovan för att starta analysen.
             </p>
           </div>
