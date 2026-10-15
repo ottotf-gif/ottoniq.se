@@ -1,25 +1,29 @@
 import { useState } from 'react';
 
-const faqs = [
+const faqs: { q: string; a: string }[] = [
   {
-    q: 'Hur går det till?',
-    a: 'Du berättar om ditt företag, jag designar och bygger sidan. Vi stämmer av under vägen, och när du är nöjd lanserar vi.',
+    q: 'Vad kostar det?',
+    a: '3 000 kr om året. Allt ingår: design, bygge, domän, hosting och ändringar.',
   },
   {
-    q: 'Hur lång tid tar det att bygga en hemsida?',
-    a: 'Normalt 1–2 veckor från att vi pratat klart om vad du vill ha. Akuta projekt kan gå snabbare.',
+    q: 'Hur lång tid tar det?',
+    a: 'Oftast 1–2 veckor från första samtalet tills sidan är live.',
   },
   {
-    q: 'Vad ingår?',
-    a: 'Allt. Design, kodning, domänuppsättning, hosting, mobilanpassning, SEO-grundoptimering och support.',
+    q: 'Vad behöver jag göra själv?',
+    a: 'Berätta om ditt företag och skicka några bilder om du har. Resten fixar jag.',
   },
   {
-    q: 'Kan jag ha bokningssystem på hemsidan?',
-    a: 'Ja. Jag kopplar bokning direkt på din hemsida så kunder kan boka tid utan att lämna sidan.',
+    q: 'Kan jag ha bokning på hemsidan?',
+    a: 'Ja, det går att lägga till.',
   },
   {
-    q: 'Behöver jag kunna något om hemsidor?',
-    a: 'Nej. Du berättar vad du vill ha och jag bygger allt. Du behöver inte göra något tekniskt.',
+    q: 'Vad händer om jag vill sluta?',
+    a: 'Du kan säga upp avtalet och behöver inte betala mer. Domänen äger du själv och kan flytta om du vill.',
+  },
+  {
+    q: 'Jag har redan en hemsida, kan du göra om den?',
+    a: 'Ja. Domänen kan vi oftast flytta med.',
   },
 ];
 
@@ -27,36 +31,37 @@ export default function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section className="relative py-24 sm:py-32 bg-bg-elev noise">
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16">
-        <div className="mb-16 fade-in">
-          <span className="section-label mb-6 block">N° 08 — FAQ</span>
-          <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-light leading-[1.05] text-text tracking-tight">
-            Frågor om{' '}
-            <span className="font-serif-italic text-accent">hemsida</span>
-          </h2>
-        </div>
+    <section id="fragor" className="relative py-20 sm:py-28 bg-bg-elev">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10">
+        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold leading-tight text-text tracking-tight mb-12 sm:mb-16 fade-in">
+          Vanliga frågor
+        </h2>
 
-        <div className="max-w-3xl ml-auto border-t border-border-subtle">
+        <div className="max-w-2xl border-t border-border-subtle">
           {faqs.map((faq, i) => (
             <div key={i} className="border-b border-border-subtle fade-in">
               <button
                 onClick={() => setOpen(open === i ? null : i)}
                 className="w-full flex items-start justify-between gap-6 py-6 text-left"
                 aria-expanded={open === i}
+                aria-controls={`faq-answer-${i}`}
               >
-                <span className="font-serif text-xl text-text leading-snug">
+                <h3 className="text-[17px] sm:text-[18px] font-medium text-text leading-snug">
                   {faq.q}
-                </span>
+                </h3>
                 <span
-                  className="text-accent text-2xl flex-shrink-0 mt-0.5 transition-transform duration-300"
+                  className="text-accent text-2xl flex-shrink-0 leading-none mt-0.5 transition-transform duration-200"
+                  aria-hidden="true"
                   style={{ transform: open === i ? 'rotate(45deg)' : 'none' }}
                 >
                   +
                 </span>
               </button>
               {open === i && (
-                <div className="pb-6 text-base text-text-muted leading-relaxed">
+                <div
+                  id={`faq-answer-${i}`}
+                  className="pb-6 text-[17px] sm:text-[18px] text-text-muted leading-[1.65]"
+                >
                   {faq.a}
                 </div>
               )}

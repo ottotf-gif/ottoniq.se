@@ -1,56 +1,50 @@
 const steps = [
   {
-    n: '01',
-    title: 'Samtal',
-    body: 'Vi ses och pratar om vad du behöver.',
+    n: '1.',
+    title: 'Vi pratar',
+    body: 'I telefon eller så ses vi. Du berättar om ditt företag.',
   },
   {
-    n: '02',
-    title: 'Skiss',
-    body: 'Jag designar och visar dig förslag.',
+    n: '2.',
+    title: 'Jag gör ett förslag',
+    body: 'Du ser hur sidan ser ut innan du bestämmer dig.',
   },
   {
-    n: '03',
-    title: 'Bygge',
-    body: 'Jag bygger, vi stämmer av och justerar tills det känns rätt.',
+    n: '3.',
+    title: 'Vi finslipar',
+    body: 'Du säger vad som ska ändras.',
   },
   {
-    n: '04',
-    title: 'Lansering',
-    body: 'Vi lanserar tillsammans.',
+    n: '4.',
+    title: 'Sidan går live',
+    body: 'Och jag sköter den efter det.',
   },
 ];
 
 export default function Process() {
   return (
-    <section id="process" className="relative py-28 sm:py-40 bg-bg-elev noise">
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16">
-        <div className="mb-20 sm:mb-28 fade-in">
-          <span className="section-label mb-6 block">N° 05 — Process</span>
-          <h2 className="font-serif text-[clamp(2.25rem,5.5vw,5rem)] font-light leading-[1.02] text-text tracking-tight max-w-3xl text-balance">
-            Fyra steg,{' '}
-            <span className="font-serif-italic text-accent">utan strul.</span>
-          </h2>
-        </div>
+    <section id="sa-funkar-det" className="relative py-20 sm:py-28 bg-bg-elev">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10">
+        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold leading-tight text-text tracking-tight mb-12 sm:mb-16 fade-in">
+          Så funkar det
+        </h2>
 
         <div className="border-t border-border-subtle">
           {steps.map((s) => (
             <div
               key={s.n}
-              className="group grid grid-cols-12 gap-4 sm:gap-8 py-10 sm:py-14 border-b border-border-subtle items-baseline fade-in transition-colors duration-500 hover:bg-bg/40"
+              className="grid grid-cols-12 gap-4 sm:gap-8 py-8 sm:py-10 border-b border-border-subtle items-baseline fade-in"
             >
               <div className="col-span-2 sm:col-span-1">
-                <span className="font-serif text-3xl sm:text-4xl font-light text-accent leading-none">
-                  {s.n}
-                </span>
+                <span className="text-2xl font-bold text-accent">{s.n}</span>
               </div>
               <div className="col-span-10 sm:col-span-4">
-                <h3 className="font-serif text-3xl sm:text-4xl font-light text-text leading-none tracking-tight">
+                <h3 className="text-xl sm:text-2xl font-semibold text-text">
                   {s.title}
                 </h3>
               </div>
-              <div className="col-span-12 sm:col-span-7">
-                <p className="text-base sm:text-lg text-text-muted leading-[1.5] max-w-xl text-pretty">
+              <div className="col-span-12 sm:col-span-7 sm:col-start-6">
+                <p className="text-[17px] sm:text-[18px] text-text-muted leading-[1.65]">
                   {s.body}
                 </p>
               </div>

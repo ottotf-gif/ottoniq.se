@@ -1,108 +1,111 @@
-import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import Intro from './components/Intro';
+import Projects from './components/Projects';
 import Process from './components/Process';
 import Pricing from './components/Pricing';
-import Portfolio from './components/Portfolio';
+import About from './components/About';
 import Contact from './components/Contact';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
-import Marquee from './components/Marquee';
 import ChatBot from './components/ChatBot';
 import PrivacyPolicy from './components/PrivacyPolicy';
-import SiteCheck from './components/SiteCheck';
 import ScanPage from './components/ScanPage';
-import StyleShowcase from './components/StyleShowcase';
+import ProjectPage from './components/ProjectPage';
 import NotFound from './components/NotFound';
 import DemoRequest from './components/DemoRequest';
-import CTA from './components/CTA';
 import useFadeInOnScroll from './hooks/useFadeInOnScroll';
 
-function usePath() {
-  const [path, setPath] = useState(window.__INITIAL_PATH__ || window.location.pathname);
-  useEffect(() => {
-    const onPop = () => setPath(window.location.pathname);
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, []);
-  return path;
-}
-
-function App() {
+function Home() {
   useFadeInOnScroll();
-  const path = usePath();
-
-  if (path === '/privacypolicy') {
-    return (
-      <div key="privacy" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
-        <Navbar />
-        <main>
-          <PrivacyPolicy />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (path === '/scan') {
-    return (
-      <div key="scan" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
-        <Navbar />
-        <main>
-          <ScanPage />
-        </main>
-        <Footer />
-        <ChatBot />
-      </div>
-    );
-  }
-
-  if (path === '/demo') {
-    return (
-      <div key="demo" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
-        <Navbar />
-        <main>
-          <DemoRequest />
-        </main>
-        <Footer />
-        <ChatBot />
-      </div>
-    );
-  }
-
-  if (path === '/') {
-    return (
-      <div key="home" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
-        <Navbar />
-        <main>
-          <Hero />
-          <Marquee items={['Design from scratch', 'No templates', 'Built for speed', 'Local business', 'Bohuslän', 'SEO-optimized']} />
-          <Intro />
-          <StyleShowcase />
-          <SiteCheck />
-          <Process />
-          <Pricing />
-          <Portfolio />
-          <CTA />
-          <FAQ />
-          <Contact />
-        </main>
-        <Footer />
-        <ChatBot />
-      </div>
-    );
-  }
+  useEffect(() => {
+    document.title = 'Hemsida för småföretag i Stenungsund & Bohuslän | Ottoniq';
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', 'Jag bygger hemsidor åt lokala företag i Stenungsund, Tjörn, Orust och Kungälv. 3 000 kr/år – domän, hosting och ändringar ingår.');
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute('href', 'https://ottoniq.se/');
+  }, []);
 
   return (
-    <div key="404" className="relative bg-bg min-h-screen text-text overflow-x-hidden">
+    <main>
+      <Hero />
+      <Projects />
+      <Pricing />
+      <Process />
+      <About />
+      <FAQ />
+      <Contact />
+    </main>
+  );
+}
+
+function Scan() {
+  useFadeInOnScroll();
+  useEffect(() => {
+    document.title = 'Gratis hemsideskoll | Ottoniq';
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', 'Analysera din hemsida gratis – se hur den presterar på Google, i mobilen och på säkerhet.');
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute('href', 'https://ottoniq.se/scan');
+  }, []);
+
+  return <main><ScanPage /></main>;
+}
+
+function Demo() {
+  useFadeInOnScroll();
+  useEffect(() => {
+    document.title = 'Skicka en förfrågan | Ottoniq';
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', 'Berätta om ditt företag så hör jag av mig med ett förslag på hemsida.');
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute('href', 'https://ottoniq.se/demo');
+  }, []);
+
+  return <main><DemoRequest /></main>;
+}
+
+function ScrollToHash() {
+  const location = useLocation();
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.slice(1);
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location]);
+  return null;
+}
+
+function AppInner() {
+  useFadeInOnScroll();
+  return (
+    <div className="relative bg-bg min-h-screen text-text overflow-x-hidden">
       <Navbar />
-      <main>
-        <NotFound />
-      </main>
+      <ScrollToHash />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/scan" element={<Scan />} />
+        <Route path="/demo" element={<Demo />} />
+        <Route path="/integritetspolicy" element={<main><PrivacyPolicy /></main>} />
+        <Route path="/privacypolicy" element={<main><PrivacyPolicy /></main>} />
+        <Route path="/projekt/:slug" element={<main><ProjectPage /></main>} />
+        <Route path="*" element={<main><NotFound /></main>} />
+      </Routes>
       <Footer />
+      <ChatBot />
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppInner />
+    </BrowserRouter>
+  );
+}

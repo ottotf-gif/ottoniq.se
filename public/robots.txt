@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.ottoniq.se/sitemap.xml
+Sitemap: https://ottoniq.se/sitemap.xml

@@ -5,16 +5,16 @@
 :root {
   color-scheme: dark;
   --bg: #0A0B0F;
-  --bg-elev: #121319;
-  --bg-card: #16171F;
+  --bg-elev: #111218;
+  --bg-card: #15161E;
   --surface: #1C1D27;
-  --border-subtle: #1E1F2A;
-  --border: #262733;
-  --text: #EDEDEF;
-  --text-muted: #8A8B95;
-  --text-dim: #5A5B66;
-  --accent: #C6FF3D;
-  --accent-dim: #9FCC2F;
+  --border-subtle: #1C1D27;
+  --border: #24252F;
+  --text: #E8E9EC;
+  --text-muted: #9B9CA8;
+  --text-dim: #5C5D6A;
+  --accent: #C6F432;
+  --accent-dim: #A8D028;
 }
 
 html {
@@ -26,11 +26,19 @@ body {
   overflow-x: hidden;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter Tight', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: 'Instrument Sans', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-weight: 400;
+  font-size: 18px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   letter-spacing: -0.01em;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 17px;
+  }
 }
 
 * {
@@ -50,47 +58,9 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-dim);
-}
-
-.font-serif {
-  font-family: 'Fraunces', 'Times New Roman', serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "SOFT" 50;
-  letter-spacing: -0.025em;
-}
-
-.font-serif-italic {
-  font-family: 'Fraunces', 'Times New Roman', serif;
-  font-style: italic;
-  font-optical-sizing: auto;
-}
-
-.text-balance {
-  text-wrap: balance;
-}
-
-.text-pretty {
-  text-wrap: pretty;
-}
-
-/* Section label — N° 01 — WEB DESIGN */
-.section-label {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-.eyebrow {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
 }
 
 /* Hairline divider */
@@ -99,7 +69,16 @@ body {
   background: var(--border-subtle);
 }
 
-/* Fade in on scroll — progressive enhancement */
+/* Section label */
+.section-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* Fade in on scroll */
 .fade-in {
   opacity: 1;
   transform: none;
@@ -107,9 +86,9 @@ body {
 
 html.js-ready .fade-in {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(20px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html.js-ready .fade-in.is-visible {
@@ -147,87 +126,46 @@ html.js-ready .fade-in.is-visible {
   transform: scaleX(0);
 }
 
-/* Marquee */
-.marquee {
-  display: flex;
-  overflow: hidden;
-  user-select: none;
-  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
-}
-.marquee__track {
-  display: flex;
-  flex-shrink: 0;
-  gap: 3rem;
-  padding-right: 3rem;
-  min-width: 100%;
-  animation: scroll 40s linear infinite;
-  will-change: transform;
-}
-@keyframes scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
-}
-
 /* Accent button */
 .btn-accent {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1.75rem;
+  gap: 0.625rem;
+  padding: 0.875rem 1.5rem;
   background: var(--accent);
   color: var(--bg);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: all 0.25s ease;
+  border: none;
+  cursor: pointer;
 }
 .btn-accent:hover {
   background: var(--accent-dim);
-  transform: translateY(-1px);
 }
 
 /* Ghost button */
 .btn-ghost {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1.75rem;
+  gap: 0.625rem;
+  padding: 0.875rem 1.5rem;
   border: 1px solid var(--border);
   color: var(--text);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
-  letter-spacing: 0.01em;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  letter-spacing: -0.01em;
+  transition: all 0.25s ease;
+  background: none;
+  cursor: pointer;
 }
 .btn-ghost:hover {
   border-color: var(--text-muted);
   background: var(--bg-elev);
 }
 
-/* Noise texture for dark surfaces */
-.noise {
-  position: relative;
-}
-.noise::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* Image reveal clip */
-.clip-reveal {
-  clip-path: inset(0 0 100% 0);
-  transition: clip-path 1.2s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.clip-reveal.is-visible {
-  clip-path: inset(0 0 0 0);
-}
-
-/* Scan score bar */
+/* Score bar (scan) */
 .score-bar {
   height: 2px;
   background: var(--border-subtle);
