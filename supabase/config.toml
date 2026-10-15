@@ -6,3 +6,6 @@ verify_jwt = false
 
 [functions.brief-notify]
 verify_jwt = false
+
+[functions.scan-website]
+verify_jwt = false

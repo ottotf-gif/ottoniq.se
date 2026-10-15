@@ -12,6 +12,7 @@ import Footer from './components/Footer';
 import ChatBot from './components/ChatBot';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import ScanPage from './components/ScanPage';
+import ScanResult from './components/ScanResult';
 import ProjectPage from './components/ProjectPage';
 import NotFound from './components/NotFound';
 import DemoRequest from './components/DemoRequest';
@@ -53,6 +54,25 @@ function Scan() {
   return <main><ScanPage /></main>;
 }
 
+function ScanResultPage() {
+  useEffect(() => {
+    document.title = 'Din hemsideskoll | Ottoniq';
+    const robots = document.querySelector('meta[name="robots"]');
+    if (!robots) {
+      const m = document.createElement('meta');
+      m.name = 'robots';
+      m.content = 'noindex';
+      document.head.appendChild(m);
+    } else {
+      robots.setAttribute('content', 'noindex');
+    }
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute('href', 'https://ottoniq.se/scan');
+  }, []);
+
+  return <main><ScanResult /></main>;
+}
+
 function Demo() {
   useFadeInOnScroll();
   useEffect(() => {
@@ -90,6 +110,7 @@ function AppInner() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/scan" element={<Scan />} />
+        <Route path="/scan/:id" element={<ScanResultPage />} />
         <Route path="/demo" element={<Demo />} />
         <Route path="/integritetspolicy" element={<main><PrivacyPolicy /></main>} />
         <Route path="/privacypolicy" element={<main><PrivacyPolicy /></main>} />
