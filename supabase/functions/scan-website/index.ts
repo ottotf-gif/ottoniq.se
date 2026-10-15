@@ -83,7 +83,35 @@ interface BrowserlessResult {
   renderedHtml: string | null;
 }
 
-async function runBrowserless(url: string): Promise<BrowserlessResult> {
+interface Diagnostics {
+  browserless_token_present: boolean;
+  serpapi_key_present: boolean;
+  openai_key_present: boolean;
+  browserless_mobile: { status: number | null; error: string | null; bytes: number };
+  browserless_desktop: { status: number | null; error: string | null; bytes: number };
+  browserless_content: { status: number | null; error: string | null };
+  serpapi_searches: { query: string; status: number | null; error: string | null; has_kg: boolean; has_local: boolean; organic_count: number }[];
+  pagespeed: { status: number | null; error: string | null };
+  openai: { status: number | null; error: string | null };
+  result_update_error: string | null;
+}
+
+function emptyDiagnostics(): Diagnostics {
+  return {
+    browserless_token_present: !!BROWSERLESS_TOKEN,
+    serpapi_key_present: !!SERPAPI_KEY,
+    openai_key_present: !!OPENAI_API_KEY,
+    browserless_mobile: { status: null, error: null, bytes: 0 },
+    browserless_desktop: { status: null, error: null, bytes: 0 },
+    browserless_content: { status: null, error: null },
+    serpapi_searches: [],
+    pagespeed: { status: null, error: null },
+    openai: { status: null, error: null },
+    result_update_error: null,
+  };
+}
+
+async function runBrowserless(url: string, diag: Diagnostics): Promise<BrowserlessResult> {
   if (!BROWSERLESS_TOKEN) {
     return { mobileScreenshot: null, desktopScreenshot: null, renderedHtml: null };
   }
@@ -98,18 +126,25 @@ async function runBrowserless(url: string): Promise<BrowserlessResult> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         url,
-        options: { type: "jpeg", quality: 70, fullPage: false },
+        options: { type: "jpeg", quality: 55, fullPage: false },
         viewport: { width: 390, height: 844, isMobile: true, hasTouch: true },
         waitFor: 2500,
         gotoOptions: { waitUntil: "networkidle0", timeout: 30000 },
       }),
       signal: AbortSignal.timeout(45000),
     });
+    diag.browserless_mobile.status = mobileRes.status;
     if (mobileRes.ok) {
       const buf = await mobileRes.arrayBuffer();
+      diag.browserless_mobile.bytes = buf.byteLength;
       results.mobileScreenshot = `data:image/jpeg;base64,${arrayBufferToBase64(buf)}`;
+    } else {
+      const text = await mobileRes.text().catch(() => "");
+      diag.browserless_mobile.error = `HTTP ${mobileRes.status}: ${text.slice(0, 200)}`;
     }
-  } catch { /* skip */ }
+  } catch (e) {
+    diag.browserless_mobile.error = e instanceof Error ? e.message : String(e);
+  }
 
   // Desktop screenshot
   try {
@@ -118,18 +153,25 @@ async function runBrowserless(url: string): Promise<BrowserlessResult> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         url,
-        options: { type: "jpeg", quality: 70, fullPage: false },
+        options: { type: "jpeg", quality: 55, fullPage: false },
         viewport: { width: 1440, height: 900 },
         waitFor: 2500,
         gotoOptions: { waitUntil: "networkidle0", timeout: 30000 },
       }),
       signal: AbortSignal.timeout(45000),
     });
+    diag.browserless_desktop.status = desktopRes.status;
     if (desktopRes.ok) {
       const buf = await desktopRes.arrayBuffer();
+      diag.browserless_desktop.bytes = buf.byteLength;
       results.desktopScreenshot = `data:image/jpeg;base64,${arrayBufferToBase64(buf)}`;
+    } else {
+      const text = await desktopRes.text().catch(() => "");
+      diag.browserless_desktop.error = `HTTP ${desktopRes.status}: ${text.slice(0, 200)}`;
     }
-  } catch { /* skip */ }
+  } catch (e) {
+    diag.browserless_desktop.error = e instanceof Error ? e.message : String(e);
+  }
 
   // Rendered HTML content (scrape endpoint)
   try {
@@ -142,11 +184,17 @@ async function runBrowserless(url: string): Promise<BrowserlessResult> {
       }),
       signal: AbortSignal.timeout(45000),
     });
+    diag.browserless_content.status = scrapeRes.status;
     if (scrapeRes.ok) {
       const scrapeData = await scrapeRes.json();
       results.renderedHtml = scrapeData?.content || scrapeData?.html || null;
+    } else {
+      const text = await scrapeRes.text().catch(() => "");
+      diag.browserless_content.error = `HTTP ${scrapeRes.status}: ${text.slice(0, 200)}`;
     }
-  } catch { /* skip */ }
+  } catch (e) {
+    diag.browserless_content.error = e instanceof Error ? e.message : String(e);
+  }
 
   return results;
 }
@@ -169,13 +217,18 @@ const emptyPageSpeed: PageSpeedData = {
   fcp: null, lcp: null, cls: null, tbt: null,
 };
 
-async function runPageSpeed(url: string): Promise<PageSpeedData> {
+async function runPageSpeed(url: string, diag: Diagnostics): Promise<PageSpeedData> {
   try {
     // Works with or without API key (lower quota without key)
     const keyParam = GOOGLE_API_KEY ? `&key=${GOOGLE_API_KEY}` : "";
     const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo${keyParam}`;
     const res = await fetch(apiUrl, { signal: AbortSignal.timeout(60000) });
-    if (!res.ok) return emptyPageSpeed;
+    diag.pagespeed.status = res.status;
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      diag.pagespeed.error = `HTTP ${res.status}: ${text.slice(0, 200)}`;
+      return emptyPageSpeed;
+    }
     const data = await res.json();
     const lr = data.lighthouseResult;
     if (!lr) return emptyPageSpeed;
@@ -199,7 +252,8 @@ async function runPageSpeed(url: string): Promise<PageSpeedData> {
       cls: metrics.cumulativeLayoutShift ?? null,
       tbt: metrics.totalBlockingTime ?? null,
     };
-  } catch {
+  } catch (e) {
+    diag.pagespeed.error = e instanceof Error ? e.message : String(e);
     return emptyPageSpeed;
   }
 }
@@ -229,22 +283,34 @@ interface GoogleProfile {
 
 async function runSerpApiSearch(
   query: string,
-  hostname: string
+  hostname: string,
+  diag: Diagnostics
 ): Promise<{
   serpData: Record<string, unknown> | null;
   foundInSearch: boolean;
   searchPosition: number | null;
   searchResults: { title: string; link: string; snippet: string }[];
 }> {
+  const searchDiag = { query, status: null as number | null, error: null as string | null, has_kg: false, has_local: false, organic_count: 0 };
   try {
     const serpRes = await fetch(
       `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&num=10&api_key=${SERPAPI_KEY}`,
       { signal: AbortSignal.timeout(15000) }
     );
-    if (!serpRes.ok) return { serpData: null, foundInSearch: false, searchPosition: null, searchResults: [] };
+    searchDiag.status = serpRes.status;
+    if (!serpRes.ok) {
+      const text = await serpRes.text().catch(() => "");
+      searchDiag.error = `HTTP ${serpRes.status}: ${text.slice(0, 200)}`;
+      diag.serpapi_searches.push(searchDiag);
+      return { serpData: null, foundInSearch: false, searchPosition: null, searchResults: [] };
+    }
 
     const serpData = await serpRes.json();
     const organic = (serpData?.organic_results || []) as Array<{ title?: string; link?: string; snippet?: string }>;
+    searchDiag.has_kg = !!serpData?.knowledge_graph;
+    searchDiag.has_local = !!serpData?.local_results;
+    searchDiag.organic_count = organic.length;
+    diag.serpapi_searches.push(searchDiag);
 
     let foundInSearch = false;
     let searchPosition: number | null = null;
@@ -264,7 +330,9 @@ async function runSerpApiSearch(
     }));
 
     return { serpData, foundInSearch, searchPosition, searchResults };
-  } catch {
+  } catch (e) {
+    searchDiag.error = e instanceof Error ? e.message : String(e);
+    diag.serpapi_searches.push(searchDiag);
     return { serpData: null, foundInSearch: false, searchPosition: null, searchResults: [] };
   }
 }
@@ -272,7 +340,8 @@ async function runSerpApiSearch(
 async function runGoogleVisibility(
   companyName: string | null,
   ort: string | null,
-  hostname: string
+  hostname: string,
+  diag: Diagnostics
 ): Promise<GoogleProfile> {
   const result: GoogleProfile = {
     google_profil_hittad: false,
@@ -310,7 +379,7 @@ async function runGoogleVisibility(
   });
 
   for (let qi = 0; qi < queries.length; qi++) {
-    const { serpData, foundInSearch, searchPosition, searchResults } = await runSerpApiSearch(queries[qi], hostname);
+    const { serpData, foundInSearch, searchPosition, searchResults } = await runSerpApiSearch(queries[qi], hostname, diag);
 
     if (foundInSearch && !result.found_in_search) {
       result.found_in_search = true;
@@ -387,7 +456,8 @@ async function runAIAssessment(
   googleProfile: GoogleProfile,
   url: string,
   companyName: string | null,
-  ort: string | null
+  ort: string | null,
+  diag: Diagnostics
 ): Promise<AIAssessment | null> {
   if (!OPENAI_API_KEY) return null;
 
@@ -490,7 +560,12 @@ Regler:
       signal: AbortSignal.timeout(90000),
     });
 
-    if (!res.ok) return null;
+    diag.openai.status = res.status;
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      diag.openai.error = `HTTP ${res.status}: ${text.slice(0, 200)}`;
+      return null;
+    }
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content;
     if (!content) return null;
@@ -498,7 +573,8 @@ Regler:
     const parsed = JSON.parse(content);
     if (!parsed.areas || !parsed.improvements) return null;
     return parsed as AIAssessment;
-  } catch {
+  } catch (e) {
+    diag.openai.error = e instanceof Error ? e.message : String(e);
     return null;
   }
 }
@@ -506,20 +582,21 @@ Regler:
 // ---------- full scan pipeline ----------
 
 async function executeScan(scanId: string, url: string, companyName: string | null, ort: string | null) {
+  const diag = emptyDiagnostics();
   try {
     await updateScan(scanId, { status: "running", step: 1 });
 
     // Step 1: Browserless
-    const browserless = await runBrowserless(url);
+    const browserless = await runBrowserless(url, diag);
     await updateScan(scanId, { step: 2 });
 
     // Step 2: PageSpeed
-    const pageSpeed = await runPageSpeed(url);
+    const pageSpeed = await runPageSpeed(url, diag);
     await updateScan(scanId, { step: 3 });
 
     // Step 3: Google visibility via SerpApi
     const hostname = getHostname(url);
-    const googleProfile = await runGoogleVisibility(companyName, ort, hostname);
+    const googleProfile = await runGoogleVisibility(companyName, ort, hostname, diag);
     await updateScan(scanId, { step: 4 });
 
     // Step 4: AI assessment
@@ -531,7 +608,8 @@ async function executeScan(scanId: string, url: string, companyName: string | nu
       googleProfile,
       url,
       companyName,
-      ort
+      ort,
+      diag
     );
 
     // Build final result
@@ -547,10 +625,28 @@ async function executeScan(scanId: string, url: string, companyName: string | nu
       pageSpeed,
       googleProfile,
       assessment: aiAssessment,
+      diagnostics: diag,
       scannedAt: new Date().toISOString(),
     };
 
-    await updateScan(scanId, { status: "completed", step: 4, result });
+    const { error: updateErr } = await supabase
+      .from("scans")
+      .update({ status: "completed", step: 4, result, updated_at: new Date().toISOString() })
+      .eq("id", scanId);
+
+    if (updateErr) {
+      diag.result_update_error = updateErr.message;
+      // Retry without screenshots in case the payload was too large
+      const resultWithoutScreenshots = {
+        ...result,
+        screenshots: { mobile: null, desktop: null },
+        diagnostics: diag,
+      };
+      await supabase
+        .from("scans")
+        .update({ status: "completed", step: 4, result: resultWithoutScreenshots, updated_at: new Date().toISOString() })
+        .eq("id", scanId);
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Okänt fel uppstod";
     await updateScan(scanId, { status: "failed", error: msg });
@@ -580,6 +676,19 @@ Deno.serve(async (req: Request) => {
         .maybeSingle();
 
       if (error || !data) return json({ error: "Hittade inte scannen" }, 404);
+
+      // If debug=1, strip out screenshots and show diagnostics
+      if (url.searchParams.get("debug") === "1" && data.result) {
+        const debugResult = typeof data.result === "string" ? JSON.parse(data.result) : data.result;
+        return json({
+          ...data,
+          result: {
+            ...debugResult,
+            screenshots: undefined,
+          },
+        });
+      }
+
       return json(data);
     }
 
