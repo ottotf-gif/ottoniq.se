@@ -13,6 +13,7 @@ import {
   Phone,
   RotateCw,
   ArrowLeft,
+  Star,
 } from 'lucide-react';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -39,6 +40,27 @@ interface ScanAssessment {
   overallSummary: string;
 }
 
+interface GoogleProfile {
+  google_profil_hittad: boolean;
+  knowledge_graph: {
+    exists: boolean;
+    title: string | null;
+    rating: number | null;
+    review_count: number | null;
+    has_hours: boolean;
+    website_matches: boolean;
+  };
+  local_results: {
+    exists: boolean;
+    rating: number | null;
+    reviews: number | null;
+    position: number | null;
+  };
+  found_in_search: boolean;
+  search_position: number | null;
+  search_results: { title: string; link: string; snippet: string }[];
+}
+
 interface ScanResultData {
   id: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
@@ -56,14 +78,9 @@ interface ScanResultData {
       performance: number | null;
       accessibility: number | null;
       seo: number | null;
+      lcp: number | null;
     };
-    googleVisibility: {
-      hasPlace: boolean;
-      placeRating: number | null;
-      placeReviewCount: number | null;
-      foundInSearch: boolean;
-      searchPosition: number | null;
-    };
+    googleProfile: GoogleProfile;
     assessment: ScanAssessment | null;
     scannedAt: string;
   } | null;
@@ -86,12 +103,6 @@ const AREA_ICONS: Record<string, typeof Smartphone> = {
   google_visibility: Search,
   content: Globe,
   performance: Gauge,
-};
-
-const PRIORITY_LABELS: Record<string, string> = {
-  hojt: 'Hög prioritet',
-  medel: 'Medel prioritet',
-  lagt: 'Låg prioritet',
 };
 
 function ProgressView({ step }: { step: number }) {
@@ -196,25 +207,16 @@ function AreaCard({ area }: { area: ScanArea }) {
   );
 }
 
-function ImprovementCard({ imp }: { imp: ScanImprovement }) {
-  const priorityColor =
-    imp.priority === 'hojt'
-      ? 'text-amber-400 border-amber-500/30 bg-amber-500/5'
-      : imp.priority === 'medel'
-      ? 'text-blue-400 border-blue-500/30 bg-blue-500/5'
-      : 'text-text-dim border-border-subtle bg-bg-elev/30';
-
+function ImprovementCard({ imp, index }: { imp: ScanImprovement; index: number }) {
   return (
     <div className="border border-border-subtle p-5">
-      <div className="flex items-start justify-between gap-4 mb-3">
+      <div className="flex items-start gap-4 mb-3">
+        <span className="text-xs text-text-dim border border-border-subtle px-2 py-0.5 shrink-0">
+          {index + 1}
+        </span>
         <h4 className="font-sans text-base font-normal text-text leading-snug">
           {imp.title}
         </h4>
-        <span
-          className={`text-xs px-2 py-0.5 border shrink-0 ${priorityColor}`}
-        >
-          {PRIORITY_LABELS[imp.priority] || imp.priority}
-        </span>
       </div>
       <p className="text-sm text-text-muted leading-relaxed">
         {imp.description}
@@ -357,8 +359,8 @@ export default function ScanResult() {
     return (
       <section className="min-h-[60vh] flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="inline-flex items-center justify-center w-14 h-14 mb-6 border border-red-500/30">
-            <AlertCircle className="w-7 h-7 text-red-400" />
+          <div className="inline-flex items-center justify-center w-14 h-14 mb-6 border border-amber-500/30">
+            <AlertCircle className="w-7 h-7 text-amber-400" />
           </div>
           <h1 className="font-sans text-3xl font-light text-text mb-4">
             Kollen kunde inte slutföras
@@ -400,6 +402,7 @@ export default function ScanResult() {
   const assessment = result.assessment;
   const goodAreas = assessment?.areas?.filter((a) => a.status === 'bra') || [];
   const improveAreas = assessment?.areas?.filter((a) => a.status === 'kan_forbattras') || [];
+  const gp = result.googleProfile;
 
   return (
     <section className="px-4 py-12 sm:py-16">
@@ -482,10 +485,10 @@ export default function ScanResult() {
         <div className="mb-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="border border-border-subtle p-5 text-center">
             <Search className="w-5 h-5 text-text-muted mx-auto mb-2" />
-            <p className="text-xs text-text-dim mb-1">Google Maps</p>
+            <p className="text-xs text-text-dim mb-1">Google-profil</p>
             <p className="text-sm text-text">
-              {result.googleVisibility.hasPlace
-                ? `Syns${result.googleVisibility.placeRating ? ` (${result.googleVisibility.placeRating}★)` : ''}`
+              {gp?.google_profil_hittad
+                ? `Syns${gp.knowledge_graph.rating ? ` (${gp.knowledge_graph.rating}★)` : gp.local_results.rating ? ` (${gp.local_results.rating}★)` : ''}`
                 : 'Syns inte'}
             </p>
           </div>
@@ -493,8 +496,8 @@ export default function ScanResult() {
             <Globe className="w-5 h-5 text-text-muted mx-auto mb-2" />
             <p className="text-xs text-text-dim mb-1">Google-sök</p>
             <p className="text-sm text-text">
-              {result.googleVisibility.foundInSearch
-                ? `Hittad${result.googleVisibility.searchPosition ? ` på plats ${result.googleVisibility.searchPosition}` : ''}`
+              {gp?.found_in_search
+                ? `Hittad${gp.search_position ? ` på plats ${gp.search_position}` : ''}`
                 : 'Hittades inte'}
             </p>
           </div>
@@ -502,12 +505,44 @@ export default function ScanResult() {
             <Gauge className="w-5 h-5 text-text-muted mx-auto mb-2" />
             <p className="text-xs text-text-dim mb-1">Laddtid (mobil)</p>
             <p className="text-sm text-text">
-              {result.pageSpeed.performance !== null
-                ? `${(result.pageSpeed.performance / 100).toFixed(1)}s LCP`
+              {result.pageSpeed.lcp !== null
+                ? `${(result.pageSpeed.lcp / 1000).toFixed(1)}s LCP`
                 : 'Ej mätt'}
             </p>
           </div>
         </div>
+
+        {/* Google profile details */}
+        {gp?.google_profil_hittad && (
+          <div className="mb-12 border border-border-subtle p-6">
+            <h3 className="font-sans text-lg font-light text-text mb-4 flex items-center gap-2">
+              <Star className="w-4 h-4 text-accent" />
+              Din Google-profil
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {gp.knowledge_graph.exists && (
+                <div className="text-sm text-text-muted space-y-1">
+                  <p className="text-text-dim text-xs mb-1">Sidopanel (Knowledge Graph)</p>
+                  {gp.knowledge_graph.title && <p>Namn: {gp.knowledge_graph.title}</p>}
+                  {gp.knowledge_graph.rating && (
+                    <p>Betyg: {gp.knowledge_graph.rating}{gp.knowledge_graph.review_count ? ` (${gp.knowledge_graph.review_count} recensioner)` : ''}</p>
+                  )}
+                  <p>Öppettider: {gp.knowledge_graph.has_hours ? 'Finns' : 'Saknas'}</p>
+                  <p>Webbadress matchar: {gp.knowledge_graph.website_matches ? 'Ja' : 'Nej'}</p>
+                </div>
+              )}
+              {gp.local_results.exists && (
+                <div className="text-sm text-text-muted space-y-1">
+                  <p className="text-text-dim text-xs mb-1">Kartresultat (Local Results)</p>
+                  {gp.local_results.rating && (
+                    <p>Betyg: {gp.local_results.rating}{gp.local_results.reviews ? ` (${gp.local_results.reviews} recensioner)` : ''}</p>
+                  )}
+                  {gp.local_results.position && <p>Position: {gp.local_results.position}</p>}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Improvements */}
         {assessment?.improvements && assessment.improvements.length > 0 && (
@@ -516,8 +551,8 @@ export default function ScanResult() {
               Konkreta förbättringar
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {assessment.improvements.map((imp) => (
-                <ImprovementCard key={imp.id} imp={imp} />
+              {assessment.improvements.map((imp, i) => (
+                <ImprovementCard key={imp.id} imp={imp} index={i} />
               ))}
             </div>
           </div>

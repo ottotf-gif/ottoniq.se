@@ -17,7 +17,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 
 const BROWSERLESS_TOKEN = Deno.env.get("BROWSERLESS_TOKEN") || "";
 const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY") || "";
-const SERPAI_KEY = Deno.env.get("SERPAI_KEY") || "";
+const SERPAPI_KEY = Deno.env.get("SERPAPI_KEY") || "";
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 const OPENAI_MODEL = Deno.env.get("OPENAI_MODEL") || "gpt-4o";
 
@@ -153,18 +153,21 @@ interface PageSpeedData {
   tbt: number | null;
 }
 
-async function runPageSpeed(url: string): Promise<PageSpeedData> {
-  if (!GOOGLE_API_KEY) {
-    return { performance: null, accessibility: null, bestPractices: null, seo: null, fcp: null, lcp: null, cls: null, tbt: null };
-  }
+const emptyPageSpeed: PageSpeedData = {
+  performance: null, accessibility: null, bestPractices: null, seo: null,
+  fcp: null, lcp: null, cls: null, tbt: null,
+};
 
+async function runPageSpeed(url: string): Promise<PageSpeedData> {
   try {
-    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo&key=${GOOGLE_API_KEY}`;
+    // Works with or without API key (lower quota without key)
+    const keyParam = GOOGLE_API_KEY ? `&key=${GOOGLE_API_KEY}` : "";
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo${keyParam}`;
     const res = await fetch(apiUrl, { signal: AbortSignal.timeout(60000) });
-    if (!res.ok) return { performance: null, accessibility: null, bestPractices: null, seo: null, fcp: null, lcp: null, cls: null, tbt: null };
+    if (!res.ok) return emptyPageSpeed;
     const data = await res.json();
     const lr = data.lighthouseResult;
-    if (!lr) return { performance: null, accessibility: null, bestPractices: null, seo: null, fcp: null, lcp: null, cls: null, tbt: null };
+    if (!lr) return emptyPageSpeed;
 
     const cats = lr.categories || {};
     const audits = lr.audits || {};
@@ -186,102 +189,157 @@ async function runPageSpeed(url: string): Promise<PageSpeedData> {
       tbt: metrics.totalBlockingTime ?? null,
     };
   } catch {
-    return { performance: null, accessibility: null, bestPractices: null, seo: null, fcp: null, lcp: null, cls: null, tbt: null };
+    return emptyPageSpeed;
   }
 }
 
-// ---------- step 3: Google visibility (Places + SerpApi) ----------
+// ---------- step 3: Google visibility via SerpApi ----------
 
-interface GoogleVisibility {
-  hasPlace: boolean;
-  placeRating: number | null;
-  placeReviewCount: number | null;
-  placeTypes: string[];
+interface GoogleProfile {
+  google_profil_hittad: boolean;
+  knowledge_graph: {
+    exists: boolean;
+    title: string | null;
+    rating: number | null;
+    review_count: number | null;
+    has_hours: boolean;
+    website_matches: boolean;
+  };
+  local_results: {
+    exists: boolean;
+    rating: number | null;
+    reviews: number | null;
+    position: number | null;
+  };
+  found_in_search: boolean;
+  search_position: number | null;
+  search_results: { title: string; link: string; snippet: string }[];
+}
+
+async function runSerpApiSearch(
+  query: string,
+  hostname: string
+): Promise<{
+  serpData: Record<string, unknown> | null;
   foundInSearch: boolean;
   searchPosition: number | null;
   searchResults: { title: string; link: string; snippet: string }[];
+}> {
+  try {
+    const serpRes = await fetch(
+      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&num=10&api_key=${SERPAPI_KEY}`,
+      { signal: AbortSignal.timeout(15000) }
+    );
+    if (!serpRes.ok) return { serpData: null, foundInSearch: false, searchPosition: null, searchResults: [] };
+
+    const serpData = await serpRes.json();
+    const organic = (serpData?.organic_results || []) as Array<{ title?: string; link?: string; snippet?: string }>;
+
+    let foundInSearch = false;
+    let searchPosition: number | null = null;
+
+    for (let i = 0; i < organic.length; i++) {
+      const link = organic[i].link || "";
+      if (link.includes(hostname)) {
+        foundInSearch = true;
+        if (searchPosition === null) searchPosition = i + 1;
+      }
+    }
+
+    const searchResults = organic.slice(0, 5).map((r) => ({
+      title: r.title || "",
+      link: r.link || "",
+      snippet: r.snippet || "",
+    }));
+
+    return { serpData, foundInSearch, searchPosition, searchResults };
+  } catch {
+    return { serpData: null, foundInSearch: false, searchPosition: null, searchResults: [] };
+  }
 }
 
 async function runGoogleVisibility(
   companyName: string | null,
   ort: string | null,
   hostname: string
-): Promise<GoogleVisibility> {
-  const result: GoogleVisibility = {
-    hasPlace: false,
-    placeRating: null,
-    placeReviewCount: null,
-    placeTypes: [],
-    foundInSearch: false,
-    searchPosition: null,
-    searchResults: [],
+): Promise<GoogleProfile> {
+  const result: GoogleProfile = {
+    google_profil_hittad: false,
+    knowledge_graph: {
+      exists: false,
+      title: null,
+      rating: null,
+      review_count: null,
+      has_hours: false,
+      website_matches: false,
+    },
+    local_results: {
+      exists: false,
+      rating: null,
+      reviews: null,
+      position: null,
+    },
+    found_in_search: false,
+    search_position: null,
+    search_results: [],
   };
 
-  const searchText = [companyName, ort].filter(Boolean).join(" ");
+  if (!SERPAPI_KEY) return result;
 
-  // Google Places API (New) — text search
-  if (GOOGLE_API_KEY && searchText) {
-    try {
-      const placesRes = await fetch("https://places.googleapis.com/v1/places:searchText", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": GOOGLE_API_KEY,
-          "X-Goog-FieldMask": "places.displayName,places.rating,places.userRatingCount,places.types",
-        },
-        body: JSON.stringify({ textQuery: searchText, languageCode: "sv" }),
-        signal: AbortSignal.timeout(15000),
-      });
-      if (placesRes.ok) {
-        const placesData = await placesRes.json();
-        const place = placesData?.places?.[0];
-        if (place) {
-          result.hasPlace = true;
-          result.placeRating = place.rating ?? null;
-          result.placeReviewCount = place.userRatingCount ?? null;
-          result.placeTypes = (place.types || []).slice(0, 5);
-        }
+  // Two searches: "companyName + ort" and "bransch + ort"
+  // For the second search we need a industry term — derive from company name if no explicit one
+  const query1 = [companyName, ort].filter(Boolean).join(" ").trim();
+  const query2 = ort ? `${companyName || hostname} ${ort}`.trim() : "";
+
+  const queries = [query1, query2].filter((q) => q.length > 0);
+
+  for (let qi = 0; qi < queries.length; qi++) {
+    const { serpData, foundInSearch, searchPosition, searchResults } = await runSerpApiSearch(queries[qi], hostname);
+
+    if (foundInSearch && !result.found_in_search) {
+      result.found_in_search = true;
+      result.search_position = searchPosition;
+    }
+    if (result.search_results.length === 0 && searchResults.length > 0) {
+      result.search_results = searchResults;
+    }
+
+    // Extract knowledge_graph from the first search that has it
+    if (serpData?.knowledge_graph && !result.knowledge_graph.exists) {
+      const kg = serpData.knowledge_graph as Record<string, unknown>;
+      result.knowledge_graph.exists = true;
+      result.knowledge_graph.title = (kg.title as string) || null;
+      result.knowledge_graph.rating = kg.rating != null ? parseFloat(String(kg.rating)) : null;
+      result.knowledge_graph.review_count = kg.review_count != null
+        ? parseInt(String(kg.review_count).replace(/[^\d]/g, ""), 10) || null
+        : null;
+      result.knowledge_graph.has_hours = !!(kg.hours || kg.opening_hours || kg.sunday || kg.monday);
+      const kgWebsite = (kg.website as string) || "";
+      result.knowledge_graph.website_matches = kgWebsite.includes(hostname);
+    }
+
+    // Extract local_results (map results) from the first search that has them
+    if (serpData?.local_results && !result.local_results.exists) {
+      const lr = serpData.local_results as Record<string, unknown>;
+      const places = (lr.places || []) as Array<Record<string, unknown>>;
+      if (places.length > 0) {
+        // Try to find the company in local results
+        const match = places.find((p) => {
+          const link = (p.link as string) || "";
+          return link.includes(hostname);
+        });
+        const place = match || places[0];
+        result.local_results.exists = true;
+        result.local_results.rating = place.rating != null ? parseFloat(String(place.rating)) : null;
+        result.local_results.reviews = place.reviews != null
+          ? parseInt(String(place.reviews).replace(/[^\d]/g, ""), 10) || null
+          : null;
+        result.local_results.position = match ? (places.indexOf(match) + 1) : null;
       }
-    } catch { /* skip */ }
-  }
-
-  // SerpApi — check Google search ranking
-  if (SERPAI_KEY) {
-    const queries = [
-      searchText || hostname,
-      `${companyName || hostname} ${ort || ""}`.trim(),
-      `${companyName || hostname} hemsida`.trim(),
-    ];
-
-    for (const q of queries) {
-      if (!q) continue;
-      try {
-        const serpRes = await fetch(
-          `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(q)}&num=10&api_key=${SERPAI_KEY}`,
-          { signal: AbortSignal.timeout(15000) }
-        );
-        if (serpRes.ok) {
-          const serpData = await serpRes.json();
-          const organic = serpData?.organic_results || [];
-          for (let i = 0; i < organic.length; i++) {
-            const link = organic[i].link || "";
-            if (link.includes(hostname) || link.includes(getHostname(hostname))) {
-              result.foundInSearch = true;
-              if (result.searchPosition === null) result.searchPosition = i + 1;
-            }
-          }
-          if (result.searchResults.length === 0) {
-            result.searchResults = organic.slice(0, 5).map((r: { title?: string; link?: string; snippet?: string }) => ({
-              title: r.title || "",
-              link: r.link || "",
-              snippet: r.snippet || "",
-            }));
-          }
-          if (result.foundInSearch) break;
-        }
-      } catch { /* skip */ }
     }
   }
+
+  result.google_profil_hittad = result.knowledge_graph.exists || result.local_results.exists;
 
   return result;
 }
@@ -310,7 +368,7 @@ async function runAIAssessment(
   desktopScreenshot: string | null,
   renderedHtml: string | null,
   pageSpeed: PageSpeedData,
-  googleVisibility: GoogleVisibility,
+  googleProfile: GoogleProfile,
   url: string,
   companyName: string | null,
   ort: string | null
@@ -331,12 +389,12 @@ async function runAIAssessment(
       cls: pageSpeed.cls,
       tbt: pageSpeed.tbt,
     },
-    googleVisibility: {
-      hasPlace: googleVisibility.hasPlace,
-      placeRating: googleVisibility.placeRating,
-      placeReviewCount: googleVisibility.placeReviewCount,
-      foundInSearch: googleVisibility.foundInSearch,
-      searchPosition: googleVisibility.searchPosition,
+    googleProfile: {
+      google_profil_hittad: googleProfile.google_profil_hittad,
+      knowledge_graph: googleProfile.knowledge_graph,
+      local_results: googleProfile.local_results,
+      found_in_search: googleProfile.found_in_search,
+      search_position: googleProfile.search_position,
     },
     renderedHtmlSnippet: renderedHtml ? renderedHtml.slice(0, 8000) : null,
   };
@@ -349,6 +407,12 @@ async function runAIAssessment(
       role: "system",
       content: `Du är en svensk webbkonsult som gör en ärlig, positiv och konkret bedömning av en företagshemsida.
 Du får skärmbilder, renderad HTML, data från Google PageSpeed Insights och information om företagets synbarhet på Google.
+
+Google-synbarhetsdatan kommer från SerpApi och innehåller:
+- knowledge_graph: företagets Google-profil (sidopanelen i sökresultatet). Finns den? Vilken titel? Betyg? Antal recensioner? Finns öppettider? Matchar webbadressen den skannade domänen?
+- local_results: kartresultaten. Finns företaget med? Betyg? Recensioner? Position i listan?
+- found_in_search + search_position: finns hemsidan i de vanliga sökresultaten och på vilken plats.
+- google_profil_hittad: sammanfattning av ovan — true om företaget finns i knowledge_graph eller local_results.
 
 Returnera ENDAST giltlig JSON enligt detta schema (inga poäng, inga siffror som betyg):
 
@@ -373,7 +437,10 @@ Regler:
 - Använd ALDRIG poäng, procent eller siffror som betyg.
 - Använd aldrig ordet "dålig" — skriv "kan förbättras" eller liknande.
 - Titta noga på skärmbilderna: syns företagets namn? Är layouten mobilanpassad? Ser det proffsigt ut?
-- Om du inte har skärmbilder, basera bedömningen på HTML och PageSpeed-data.`,
+- Om du inte har skärmbilder, basera bedömningen på HTML och PageSpeed-data.
+- För google_visibility-området: basera bedömningen på knowledge_graph, local_results och found_in_search.
+  Om företaget inte har en Google-profil eller inte syns i sökresultatet, markera området som "kan_forbattras"
+  och föreslå konkreta åtgärder (skapa Google-profil, lägga till på Google Maps, etc.).`,
     },
   ];
 
@@ -434,9 +501,9 @@ async function executeScan(scanId: string, url: string, companyName: string | nu
     const pageSpeed = await runPageSpeed(url);
     await updateScan(scanId, { step: 3 });
 
-    // Step 3: Google visibility
+    // Step 3: Google visibility via SerpApi
     const hostname = getHostname(url);
-    const googleVisibility = await runGoogleVisibility(companyName, ort, hostname);
+    const googleProfile = await runGoogleVisibility(companyName, ort, hostname);
     await updateScan(scanId, { step: 4 });
 
     // Step 4: AI assessment
@@ -445,7 +512,7 @@ async function executeScan(scanId: string, url: string, companyName: string | nu
       browserless.desktopScreenshot,
       browserless.renderedHtml,
       pageSpeed,
-      googleVisibility,
+      googleProfile,
       url,
       companyName,
       ort
@@ -462,7 +529,7 @@ async function executeScan(scanId: string, url: string, companyName: string | nu
         desktop: browserless.desktopScreenshot,
       },
       pageSpeed,
-      googleVisibility,
+      googleProfile,
       assessment: aiAssessment,
       scannedAt: new Date().toISOString(),
     };
@@ -525,7 +592,7 @@ Deno.serve(async (req: Request) => {
         .maybeSingle();
 
       if (rlData && rlData.count >= RATE_LIMIT) {
-        return json({ error: "Du har gjort för många koller idag. Försök igen imorgon." }, 429);
+        return json({ error: "Du har gjort för många kollar idag. Försök igen imorgon." }, 429);
       }
 
       // Caching: check for recent completed scan of same hostname
