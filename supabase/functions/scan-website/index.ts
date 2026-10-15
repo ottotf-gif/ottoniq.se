@@ -17,7 +17,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 
 const BROWSERLESS_TOKEN = Deno.env.get("BROWSERLESS_TOKEN") || "";
 const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY") || "";
-const SERPAPI_KEY = Deno.env.get("SERPAPI_KEY") || "";
+const SERPAPI_KEY = Deno.env.get("SERPAI_KEY") || Deno.env.get("SERPAPI_KEY") || "";
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 const OPENAI_MODEL = Deno.env.get("OPENAI_MODEL") || "gpt-4o";
 
@@ -66,6 +66,17 @@ async function updateScan(id: string, fields: Record<string, unknown>) {
 
 // ---------- step 1: Browserless screenshots + rendered HTML ----------
 
+function arrayBufferToBase64(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+}
+
 interface BrowserlessResult {
   mobileScreenshot: string | null;
   desktopScreenshot: string | null;
@@ -87,7 +98,7 @@ async function runBrowserless(url: string): Promise<BrowserlessResult> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         url,
-        options: { type: "jpeg", quality: 75, fullPage: false },
+        options: { type: "jpeg", quality: 70, fullPage: false },
         viewport: { width: 390, height: 844, isMobile: true, hasTouch: true },
         waitFor: 2500,
         gotoOptions: { waitUntil: "networkidle0", timeout: 30000 },
@@ -96,7 +107,7 @@ async function runBrowserless(url: string): Promise<BrowserlessResult> {
     });
     if (mobileRes.ok) {
       const buf = await mobileRes.arrayBuffer();
-      results.mobileScreenshot = `data:image/jpeg;base64,${btoa(String.fromCharCode(...new Uint8Array(buf)))}`;
+      results.mobileScreenshot = `data:image/jpeg;base64,${arrayBufferToBase64(buf)}`;
     }
   } catch { /* skip */ }
 
@@ -107,7 +118,7 @@ async function runBrowserless(url: string): Promise<BrowserlessResult> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         url,
-        options: { type: "jpeg", quality: 75, fullPage: false },
+        options: { type: "jpeg", quality: 70, fullPage: false },
         viewport: { width: 1440, height: 900 },
         waitFor: 2500,
         gotoOptions: { waitUntil: "networkidle0", timeout: 30000 },
@@ -116,7 +127,7 @@ async function runBrowserless(url: string): Promise<BrowserlessResult> {
     });
     if (desktopRes.ok) {
       const buf = await desktopRes.arrayBuffer();
-      results.desktopScreenshot = `data:image/jpeg;base64,${btoa(String.fromCharCode(...new Uint8Array(buf)))}`;
+      results.desktopScreenshot = `data:image/jpeg;base64,${arrayBufferToBase64(buf)}`;
     }
   } catch { /* skip */ }
 
@@ -286,12 +297,17 @@ async function runGoogleVisibility(
 
   if (!SERPAPI_KEY) return result;
 
-  // Two searches: "companyName + ort" and "bransch + ort"
-  // For the second search we need a industry term — derive from company name if no explicit one
+  // Two searches: "companyName + ort" and "companyName" (without ort)
+  // The second search may surface the knowledge graph panel differently
   const query1 = [companyName, ort].filter(Boolean).join(" ").trim();
-  const query2 = ort ? `${companyName || hostname} ${ort}`.trim() : "";
+  const query2 = companyName || hostname;
 
-  const queries = [query1, query2].filter((q) => q.length > 0);
+  const seen = new Set<string>();
+  const queries = [query1, query2].filter((q) => {
+    if (q.length === 0 || seen.has(q)) return false;
+    seen.add(q);
+    return true;
+  });
 
   for (let qi = 0; qi < queries.length; qi++) {
     const { serpData, foundInSearch, searchPosition, searchResults } = await runSerpApiSearch(queries[qi], hostname);
