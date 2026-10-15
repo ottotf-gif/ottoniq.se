@@ -72,8 +72,8 @@ export default function PrivacyPolicy() {
             <h2 className="text-xl font-semibold text-text mb-3">Kontaktuppgifter</h2>
             <p>
               Kontakta mig på{' '}
-              <a href="mailto:otto@ottoniq.se" className="link-underline text-text hover:text-accent transition-colors">
-                otto@ottoniq.se
+              <a href="mailto:ottoniq.se@gmail.com" className="link-underline text-text hover:text-accent transition-colors">
+                ottoniq.se@gmail.com
               </a>.
             </p>
           </div>

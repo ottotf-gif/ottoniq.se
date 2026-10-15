@@ -24,8 +24,8 @@ export default function Footer() {
               </a>
             </p>
             <p className="text-[15px] text-text-muted mt-1">
-              <a href="mailto:otto@ottoniq.se" className="hover:text-text transition-colors">
-                otto@ottoniq.se
+              <a href="mailto:ottoniq.se@gmail.com" className="hover:text-text transition-colors">
+                ottoniq.se@gmail.com
               </a>
             </p>
           </div>
@@ -66,10 +66,10 @@ export default function Footer() {
               070-422 38 87
             </a>
             <a
-              href="mailto:otto@ottoniq.se"
+              href="mailto:ottoniq.se@gmail.com"
               className="block text-[15px] text-text-muted hover:text-text transition-colors"
             >
-              otto@ottoniq.se
+              ottoniq.se@gmail.com
             </a>
           </div>
         </div>

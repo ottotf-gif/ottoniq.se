@@ -23,7 +23,7 @@ export default function About() {
               Om mig
             </h2>
             <p className="text-[17px] sm:text-[18px] text-text-muted leading-[1.65] text-pretty">
-              Jag är 20 år och bor i Stora Höga. Jag började bygga hemsidor för att många företag här runt omkring antingen saknar en, eller har en som inte har uppdaterats på flera år. Jag jobbar bara med företag i närheten, så vi kan ses om det behövs.
+              Jag är 15 år och bor i Stora Höga. Jag började bygga hemsidor för att många företag här runt omkring antingen saknar en, eller har en som inte har uppdaterats på flera år. Jag jobbar bara med företag i närheten, så vi kan ses om det behövs.
             </p>
             <div className="pt-2 grid grid-cols-2 gap-5 text-sm border-t border-border-subtle pt-5">
               <div>

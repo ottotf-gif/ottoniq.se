@@ -29,7 +29,7 @@ const projects: Record<string, ProjectData> = {
     year: '2026',
     description: [
       'Ödsmålsburgaren säljer smashburgare från en fast vagn vid Golv till Tak i Stenungsund. De gör även catering och event.',
-      'De hade ingen hemsida alls tidigare. Nu kan besökare se menyn, var vagnen står och boka dem direkt via sajten.',
+      'Ödsmålsburgaren hade en hemsida på plats, och vi är glada att ha publicerat den nya sajten. Den berättar om Jonas, vagnen på Golv till Tak och catering och event.',
     ],
     what: [
       'Hemsida designad från grunden',
@@ -49,14 +49,14 @@ const projects: Record<string, ProjectData> = {
     urlLabel: 'maltesstig.com',
     year: '2026',
     description: [
-      'Maltes Stig behövde en ren och snabb hemsida som visade upp det de gör på ett tydligt sätt.',
-      'Besökare hittar direkt vad de söker och kan kontakta dem utan krångel.',
+      'Maltes Stig vid Saltkällan i Munkedal skapades av Malte Nytorpe. Etapp för etapp byggde han stigen runt Rödberget, med hjälp av företagare, privatpersoner och besökare.',
+      'Stigen döptes till Maltes Stig år 2000 och sköts i dag ideellt av Intresseföreningen Maltes Stig. Den är ungefär 5 kilometer lång och besöks av omkring 30 000 personer varje år.',
     ],
     what: [
       'Hemsida designad från grunden',
-      'Tydlig presentation av tjänster',
+      'Tydlig historia om stigen och Maltes arbete',
+      'Information om längd, tillgänglighet och föreningen',
       'Mobilvänlig och snabb',
-      'Grundläggande sökmotoroptimering',
     ],
   },
 };

@@ -68,12 +68,12 @@ export default function Contact() {
                 070-422 38 87
               </a>
               <a
-                href="mailto:otto@ottoniq.se"
+                href="mailto:ottoniq.se@gmail.com"
                 className="flex items-center gap-3 text-[17px] sm:text-[18px] text-text hover:text-accent transition-colors"
-                aria-label="Mejla Otto på otto@ottoniq.se"
+                aria-label="Mejla Otto på ottoniq.se@gmail.com"
               >
                 <Mail className="w-5 h-5 text-accent shrink-0" />
-                otto@ottoniq.se
+                ottoniq.se@gmail.com
               </a>
             </div>
           </div>
