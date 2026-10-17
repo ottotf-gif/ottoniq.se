@@ -1,3 +1,5 @@
+import { Check } from 'lucide-react';
+
 const includes = [
   'Hemsida designad för just ditt företag',
   'Fungerar bra i mobilen',
@@ -24,7 +26,7 @@ export default function Pricing() {
               key={item}
               className="flex items-start gap-4 py-5 border-b border-border-subtle"
             >
-              <span className="text-accent mt-1 shrink-0 text-lg font-bold">—</span>
+              <Check className="w-5 h-5 text-accent shrink-0 mt-0.5" aria-hidden="true" />
               <p className="text-[17px] sm:text-[18px] text-text-muted leading-[1.55]">
                 {item}
               </p>

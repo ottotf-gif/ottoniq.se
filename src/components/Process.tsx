@@ -33,17 +33,15 @@ export default function Process() {
           {steps.map((s) => (
             <div
               key={s.n}
-              className="grid grid-cols-12 gap-4 sm:gap-8 py-8 sm:py-10 border-b border-border-subtle items-baseline fade-in"
+              className="grid grid-cols-1 sm:grid-cols-12 gap-x-8 gap-y-2 py-8 sm:py-10 border-b border-border-subtle sm:items-baseline fade-in"
             >
-              <div className="col-span-2 sm:col-span-1">
-                <span className="text-2xl font-bold text-accent">{s.n}</span>
-              </div>
-              <div className="col-span-10 sm:col-span-4">
+              <div className="sm:col-span-5 flex items-baseline gap-4">
+                <span className="text-2xl font-bold text-accent shrink-0">{s.n}</span>
                 <h3 className="text-xl sm:text-2xl font-semibold text-text">
                   {s.title}
                 </h3>
               </div>
-              <div className="col-span-12 sm:col-span-7 sm:col-start-6">
+              <div className="sm:col-span-7">
                 <p className="text-[17px] sm:text-[18px] text-text-muted leading-[1.65]">
                   {s.body}
                 </p>

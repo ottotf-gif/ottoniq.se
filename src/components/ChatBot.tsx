@@ -147,17 +147,17 @@ export default function ChatBot() {
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          background: '#C6FF3D',
+          background: '#C6F432',
           color: '#0A0B0F',
           border: 'none',
           borderRadius: 4,
           cursor: 'pointer',
-          fontFamily: "'Inter Tight', system-ui, sans-serif",
+          fontFamily: "'Instrument Sans', 'Inter', system-ui, sans-serif",
           fontSize: 13,
           fontWeight: 500,
           letterSpacing: '0.02em',
           transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)',
-          boxShadow: '0 6px 28px rgba(198,255,61,0.15)',
+          boxShadow: '0 6px 28px rgba(198,244,50,0.18)',
         }}
       >
         {open ? (
@@ -186,10 +186,10 @@ export default function ChatBot() {
           }}
         >
           <div style={{ background: '#0A0B0F', padding: '20px 22px', position: 'relative', borderBottom: '1px solid #1E1F2A' }}>
-            <div style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C6FF3D', marginBottom: 6 }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#C6F432', marginBottom: 6 }}>
               Ottoniq — chatt
             </div>
-            <div style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontSize: 22, color: '#EDEDEF', lineHeight: 1 }}>
+            <div style={{ fontFamily: "'Instrument Sans', 'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 22, color: '#EDEDEF', lineHeight: 1.15 }}>
               Hur kan jag hjälpa dig?
             </div>
             <button
@@ -214,7 +214,7 @@ export default function ChatBot() {
                     fontSize: 14,
                     lineHeight: 1.6,
                     borderRadius: 4,
-                    background: m.role === 'user' ? '#C6FF3D' : '#1C1D27',
+                    background: m.role === 'user' ? '#C6F432' : '#1C1D27',
                     color: m.role === 'user' ? '#0A0B0F' : '#EDEDEF',
                     border: m.role === 'user' ? 'none' : '1px solid #262733',
                   }}
@@ -225,8 +225,8 @@ export default function ChatBot() {
             ))}
             {booked && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <div style={{ borderLeft: '2px solid #C6FF3D', paddingLeft: 14, paddingTop: 2, paddingBottom: 2 }}>
-                  <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#C6FF3D', marginBottom: 3 }}>Skickat</div>
+                <div style={{ borderLeft: '2px solid #C6F432', paddingLeft: 14, paddingTop: 2, paddingBottom: 2 }}>
+                  <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#C6F432', marginBottom: 3 }}>Skickat</div>
                   <div style={{ fontSize: 13, color: '#8A8B95', lineHeight: 1.5 }}>Din förfrågan är skickad till Otto — han hör av sig inom en dag.</div>
                 </div>
               </div>
@@ -251,13 +251,13 @@ export default function ChatBot() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && send()}
                 placeholder="Skriv ett meddelande…"
-                style={{ flex: 1, background: '#16171F', border: '1px solid #262733', borderRadius: 4, padding: '12px 14px', fontSize: 14, color: '#EDEDEF', outline: 'none', fontFamily: "'Inter Tight', system-ui, sans-serif" }}
+                style={{ flex: 1, background: '#16171F', border: '1px solid #262733', borderRadius: 4, padding: '12px 14px', fontSize: 14, color: '#EDEDEF', outline: 'none', fontFamily: "'Instrument Sans', 'Inter', system-ui, sans-serif" }}
               />
               <button
                 onClick={send}
                 disabled={loading || !input.trim()}
                 aria-label="Skicka"
-                style={{ padding: '0 18px', borderRadius: 4, background: '#C6FF3D', color: '#0A0B0F', border: 'none', cursor: loading || !input.trim() ? 'default' : 'pointer', opacity: loading || !input.trim() ? 0.4 : 1, transition: 'opacity 0.2s', fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}
+                style={{ padding: '0 18px', borderRadius: 4, background: '#C6F432', color: '#0A0B0F', border: 'none', cursor: loading || !input.trim() ? 'default' : 'pointer', opacity: loading || !input.trim() ? 0.4 : 1, transition: 'opacity 0.2s', fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}
               >
                 Skicka
               </button>

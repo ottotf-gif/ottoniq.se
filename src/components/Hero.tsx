@@ -42,7 +42,7 @@ export default function Hero() {
           </div>
 
           {/* Photo */}
-          <div className="fade-in order-first lg:order-last">
+          <div className="fade-in lg:order-last">
             <div className="relative aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5] overflow-hidden bg-bg-card max-w-sm lg:max-w-none mx-auto">
               <img
                 src="/otto.jpeg"

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 
 interface ProjectData {
   slug: string;
@@ -153,7 +153,7 @@ export default function ProjectPage() {
             <ul className="space-y-3">
               {project.what.map((item, i) => (
                 <li key={i} className="flex items-start gap-3 text-[17px] text-text-muted">
-                  <span className="text-accent mt-1 shrink-0">—</span>
+                  <Check className="w-5 h-5 text-accent shrink-0 mt-0.5" aria-hidden="true" />
                   {item}
                 </li>
               ))}

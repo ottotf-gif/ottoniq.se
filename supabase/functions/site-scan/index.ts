@@ -376,7 +376,7 @@ Deno.serve(async (req: Request) => {
     let finalUrl = targetUrl;
     let redirected = false;
     let html = "";
-    let responseHeaders: Record<string, string> = {};
+    const responseHeaders: Record<string, string> = {};
 
     try {
       const pageRes = await fetch(targetUrl, {

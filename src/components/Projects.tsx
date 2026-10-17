@@ -7,6 +7,8 @@ const projects = [
     name: 'Ödsmålsburgaren',
     image: '/odsmalsburgaren.png',
     imageAlt: 'Skärmbild av Ödsmålsburgarens hemsida',
+    width: 1123,
+    height: 798,
     teaser: 'Ödsmålsburgaren hade en hemsida på plats, och vi är glada att ha publicerat den nya sajten. Läs mer om projektet och besök hemsidan.',
     url: 'https://www.odsmalsburgaren.se',
     urlLabel: 'odsmalsburgaren.se',
@@ -17,6 +19,8 @@ const projects = [
     name: 'Maltes Stig',
     image: '/maltesstig.png',
     imageAlt: 'Skärmbild av Maltes Stigs hemsida',
+    width: 1130,
+    height: 695,
     teaser: 'Maltes Stig har nu en tydlig hemsida som berättar historien bakom stigen och gör det lättare för besökare att hitta information. Läs mer om projektet.',
     url: 'https://maltesstig.com',
     urlLabel: 'maltesstig.com',
@@ -40,22 +44,17 @@ export default function Projects() {
                 <div className={`${i % 2 === 1 ? 'lg:order-last' : ''}`}>
                   <Link
                     to={`/projekt/${p.slug}`}
-                    className="block relative overflow-hidden bg-bg-card border border-border-subtle group"
+                    className="block overflow-hidden bg-bg-card border border-border-subtle group"
                     aria-label={`Läs mer om projektet ${p.name}`}
                   >
-                    <div className="aspect-[16/10] overflow-hidden">
-                      <img
-                        src={p.image}
-                        alt={p.imageAlt}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                        width="800"
-                        height="500"
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="absolute top-4 left-4 px-2.5 py-1 bg-accent text-bg text-[11px] font-semibold tracking-wide uppercase">
-                      Live
-                    </div>
+                    <img
+                      src={p.image}
+                      alt={p.imageAlt}
+                      className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.02]"
+                      width={p.width}
+                      height={p.height}
+                      loading="lazy"
+                    />
                   </Link>
                 </div>
 
