@@ -19,7 +19,6 @@ import DemoRequest from './components/DemoRequest';
 import useFadeInOnScroll from './hooks/useFadeInOnScroll';
 
 function Home() {
-  useFadeInOnScroll();
   useEffect(() => {
     document.title = 'Hemsida för småföretag i Stenungsund & Bohuslän | Ottoniq';
     const desc = document.querySelector('meta[name="description"]');
@@ -42,7 +41,6 @@ function Home() {
 }
 
 function Scan() {
-  useFadeInOnScroll();
   useEffect(() => {
     document.title = 'Gratis hemsideskoll | Ottoniq';
     const desc = document.querySelector('meta[name="description"]');
@@ -74,7 +72,6 @@ function ScanResultPage() {
 }
 
 function Demo() {
-  useFadeInOnScroll();
   useEffect(() => {
     document.title = 'Skicka en förfrågan | Ottoniq';
     const desc = document.querySelector('meta[name="description"]');

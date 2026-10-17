@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function useFadeInOnScroll() {
+  const { pathname } = useLocation();
+
   useEffect(() => {
     // Signal that JS is running — this is what enables the hidden start state.
     // Until this class exists, all .fade-in content is fully visible (good for
@@ -42,5 +45,8 @@ export default function useFadeInOnScroll() {
     revealInView();
 
     return () => observer.disconnect();
-  }, []);
+    // Re-run on every route change so client-side navigation (e.g. opening a
+    // project page) observes the new page's .fade-in elements. Without this
+    // they stay at opacity:0 until a full reload.
+  }, [pathname]);
 }
