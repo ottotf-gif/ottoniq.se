@@ -15,9 +15,14 @@ Deno.serve(async (req: Request) => {
     const { messages } = await req.json();
 
     const openaiKey =
-      Deno.env.get("OPENAI_KEY") ||
-      Deno.env.get("VITE_OPENAI_KEY") ||
-      "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";
+      Deno.env.get("OPENAI_KEY") || Deno.env.get("OPENAI_API_KEY") || "";
+
+    if (!openaiKey) {
+      return new Response(
+        JSON.stringify({ error: "OPENAI_KEY saknas i funktionens secrets" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
