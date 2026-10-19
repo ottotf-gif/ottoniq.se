@@ -2,8 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { ArrowRight, ArrowLeft, Camera, X, Loader2, CheckCircle2, AlertTriangle, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabaseConfig';
 
 const STORAGE_KEY = 'ottoniq_demo_brief';
 const TOTAL_STEPS = 8;

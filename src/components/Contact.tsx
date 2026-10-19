@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { Phone, Mail, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabaseConfig';
 
 export default function Contact() {
   const [name, setName] = useState('');

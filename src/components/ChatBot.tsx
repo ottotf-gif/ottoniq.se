@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabaseConfig';
 
 interface Msg {
   role: 'user' | 'assistant';
@@ -98,11 +99,11 @@ export default function ChatBot() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
           messages: [
