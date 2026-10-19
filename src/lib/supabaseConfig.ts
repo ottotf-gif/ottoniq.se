@@ -7,9 +7,11 @@
 //
 // Sätt VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY som miljövariabler för att
 // peka mot ett annat projekt — annars används standardvärdena nedan.
+// I produktion går anropen via same-origin-proxyn /sb (se worker.js) för att
+// undvika cross-origin-problem. I utveckling (localhost) anropas Supabase direkt.
 export const SUPABASE_URL =
   import.meta.env.VITE_SUPABASE_URL ||
-  'https://nxnitpsmynfttyoczilk.supabase.co';
+  (import.meta.env.PROD ? '/sb' : 'https://nxnitpsmynfttyoczilk.supabase.co');
 
 export const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
