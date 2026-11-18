@@ -16,6 +16,13 @@ export default {
       return fetch(new Request(target, request));
     }
 
+    if (url.pathname === '/kvanta') {
+      return Response.redirect(new URL('/kvanta/', request.url), 301);
+    }
+    if (url.pathname === '/kvanta/integritet') {
+      return Response.redirect(new URL('/kvanta/integritet/', request.url), 301);
+    }
+
     // Allt annat: servera de statiska filerna (med SPA-fallback till index.html).
     return env.ASSETS.fetch(request);
   },

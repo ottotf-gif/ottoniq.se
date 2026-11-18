@@ -52,6 +52,12 @@ export default function Footer() {
               >
                 Integritetspolicy
               </Link>
+              <a
+                href="/kvanta/"
+                className="text-[15px] text-text-muted hover:text-text transition-colors"
+              >
+                Kvanta
+              </a>
             </nav>
           </div>
 

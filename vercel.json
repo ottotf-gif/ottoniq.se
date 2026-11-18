@@ -1,5 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    { "source": "/kvanta", "destination": "/kvanta/", "permanent": true },
+    { "source": "/kvanta/integritet", "destination": "/kvanta/integritet/", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
