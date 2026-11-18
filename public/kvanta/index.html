@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvanta – mindre scroll, mer fokus</title>
+<meta name="description" content="Ett ämne om dagen på fem minuter. Varje kväll kl 20 får alla samma fråga – snabbast rätt vinner. Lanseras 1 januari.">
+<link rel="canonical" href="https://ottoniq.se/kvanta/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kvanta">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:url" content="https://ottoniq.se/kvanta/">
+<meta property="og:title" content="Kvanta">
+<meta property="og:description" content="Ett ämne om dagen på fem minuter. Varje kväll kl 20 får alla samma fråga – snabbast rätt vinner. Lanseras 1 januari.">
+<meta property="og:image" content="https://ottoniq.se/kvanta/kvanta-og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kvantas ikon och texten: Ett nytt ämne varje dag och en kvällsfråga kl 20.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kvanta">
+<meta name="twitter:description" content="Ett ämne om dagen på fem minuter. Varje kväll kl 20 får alla samma fråga – snabbast rätt vinner. Lanseras 1 januari.">
+<meta name="twitter:image" content="https://ottoniq.se/kvanta/kvanta-og.png">
+<meta name="twitter:image:alt" content="Kvantas ikon och texten: Ett nytt ämne varje dag och en kvällsfråga kl 20.">
+<meta name="theme-color" content="#111210">
+<link rel="icon" href="kvanta-icon.png">
+<link rel="apple-touch-icon" href="kvanta-icon.png">
+<style>
+  :root {
+    --bg: #111210; --surface: #1c1d1a; --surface-high: #2a2b27;
+    --text: #f4f4ef; --text-2: #a9aaa2; --accent: #c6ff3d; --on-accent: #111210; --danger: #ff7a6b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font: 17px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px;
+  }
+  main { width: 100%; max-width: 440px; }
+  .icon { width: 96px; height: 96px; border-radius: 22px; display: block; }
+  h1 { font-size: 36px; line-height: 1.1; margin: 24px 0 8px; font-weight: 800; letter-spacing: -0.5px; }
+  .lede { color: var(--text-2); margin: 0 0 28px; font-size: 19px; }
+  form { background: var(--surface); border-radius: 24px; padding: 20px; }
+  label { display: block; font-weight: 700; margin-bottom: 10px; }
+  input[type=email] {
+    width: 100%; font: inherit; color: var(--text); background: var(--surface-high);
+    border: 1.5px solid transparent; border-radius: 14px; padding: 14px 16px; outline: none;
+  }
+  input[type=email]:focus { border-color: var(--accent); }
+  button {
+    width: 100%; margin-top: 14px; font: inherit; font-weight: 800; color: var(--on-accent); background: var(--accent);
+    border: 0; border-radius: 14px; padding: 14px 20px; cursor: pointer; min-height: 48px;
+  }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .check { display: flex; align-items: center; gap: 12px; margin: 12px 0 0; font-weight: 600; cursor: pointer; min-height: 44px; }
+  .check input { width: 22px; height: 22px; accent-color: var(--accent); margin: 0; flex: 0 0 auto; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .note { color: var(--text-2); font-size: 14px; margin: 12px 0 0; }
+  .msg { margin: 14px 0 0; font-weight: 600; min-height: 1.5em; }
+  .msg.ok { color: var(--accent); }
+  .msg.err { color: var(--danger); }
+  footer { color: var(--text-2); font-size: 14px; margin-top: 28px; }
+  a { color: var(--text-2); }
+  @media (prefers-reduced-motion: no-preference) { main { animation: in .4s ease-out; } }
+  @keyframes in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<main>
+  <img class="icon" src="kvanta-icon.png" alt="Kvantas ikon" width="96" height="96">
+  <h1>Kvanta – mindre scroll, mer fokus</h1>
+  <p class="lede">Ett ämne om dagen på fem minuter. Varje kväll kl 20 får alla samma fråga – snabbast rätt vinner. Lanseras 1 januari.</p>
+
+  <form id="f" novalidate>
+    <label for="email">Din mejladress</label>
+    <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="din@mejl.se" required>
+    <label class="check"><input id="beta" name="beta" type="checkbox"> <span>Jag vill testa betan (iPhone)</span></label>
+    <button id="b" type="submit">Ställ mig på listan</button>
+    <div class="hp" aria-hidden="true"><label for="website">Lämna tomt</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+    <p class="msg" id="m" role="status" aria-live="polite"></p>
+    <p class="note">Du får ett mejl att bekräfta. Vi mejlar bara om betan och när appen finns i App Store, och du kan ta bort dig när du vill.</p>
+  </form>
+
+  <footer>Kvanta för iPhone · <a href="mailto:kvanta@ottoniq.se">kvanta@ottoniq.se</a></footer>
+</main>
+<script>
+  const ENDPOINT = "https://tvfwgkvfwwadsewcrrzl.supabase.co/functions/v1/waitlist";
+  const f = document.getElementById("f"), b = document.getElementById("b"), m = document.getElementById("m");
+  const say = (text, ok) => { m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); };
+
+  // After the links in the mail.
+  const q = new URLSearchParams(location.search);
+  if (q.has("bekraftad")) say("Klart! Du står på listan.", true);
+  else if (q.has("borttagen")) say("Du är borttagen från listan.", true);
+  else if (q.has("fel")) say("Länken fungerade inte. Anmäl dig gärna igen.", false);
+
+  const texts = {
+    mail: ["Klart! Kolla din mejl och bekräfta.", true],
+    wait: ["Mejlet är redan skickat – kolla inkorgen (och skräpposten).", true],
+    confirmed: ["Du står redan på listan.", true],
+    limited: ["För många försök just nu. Prova igen om en stund.", false],
+  };
+
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = f.email.value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say("Skriv en mejladress.", false); f.email.focus(); return; }
+    b.disabled = true; say("Skickar …", true);
+    try {
+      const r = await fetch(ENDPOINT, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, beta: f.beta.checked, website: f.website.value }),
+      });
+      const data = await r.json().catch(() => ({}));
+      const t = texts[data.status];
+      if (t) { say(t[0], t[1]); if (data.status !== "limited") f.reset(); }
+      else say(data.error === "email" ? "Det ser inte ut som en mejladress." : "Något gick fel. Prova igen om en stund.", false);
+    } catch {
+      say("Kunde inte nå servern. Kontrollera internet och prova igen.", false);
+    } finally {
+      b.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
