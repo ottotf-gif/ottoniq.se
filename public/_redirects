@@ -1,3 +1,5 @@
-/kvanta /kvanta/ 301
-/kvanta/integritet /kvanta/integritet/ 301
-/* /index.html 200
+/kvanta  /kvanta/  301
+/kvanta/  /kvanta/index.html  200
+/kvanta/integritet  /kvanta/integritet/  301
+/kvanta/integritet/  /kvanta/integritet/index.html  200
+/*  /index.html  200
